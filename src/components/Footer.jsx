@@ -1,148 +1,111 @@
 import React from 'react';
-import { 
-  HeartPulse, 
-  MapPin, 
-  Phone, 
-  Mail, 
-  Clock, 
-  ShieldCheck, 
-  Award, 
-  Sparkles,
-  ExternalLink 
-} from 'lucide-react';
+import { Activity, Phone, Mail, MapPin, Shield, Clock } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-export const Footer = ({ onNavigate }) => {
+export default function Footer() {
   return (
-    <footer className="bg-slate-900 text-slate-300 pt-16 pb-12 border-t border-slate-800">
+    <footer className="bg-slate-900 text-slate-300 pt-12 pb-8 border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-slate-800">
-          {/* Col 1 & 2: Brand & About */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-medical-500 to-medical-600 flex items-center justify-center text-white shadow-md">
-                <HeartPulse className="w-6 h-6" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-10 border-b border-slate-800">
+          {/* Brand info */}
+          <div className="md:col-span-1 space-y-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-500 to-cyan-400 flex items-center justify-center text-white shadow-md">
+                <Activity className="w-5 h-5 stroke-[2.5]" />
               </div>
-              <span className="text-2xl font-black tracking-tight text-white">
-                Med<span className="text-medical-400">si</span>
+              <span className="text-xl font-black tracking-tight text-white">
+                Med<span className="text-sky-400">Si</span>
               </span>
             </div>
-            <p className="text-sm text-slate-400 leading-relaxed pr-6">
-              Hệ thống kết nối người bệnh và đội ngũ chuyên gia, bác sĩ đầu ngành tại các bệnh viện uy tín. Đặt hẹn chủ động, tiết kiệm thời gian chờ đợi, nâng cao chất lượng chăm sóc sức khỏe cộng đồng.
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Nền tảng công nghệ y tế kết nối người bệnh với mạng lưới bác sĩ chuyên khoa và bệnh viện uy tín hàng đầu trên toàn quốc.
             </p>
-            <div className="flex items-center gap-6 pt-2">
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>Bảo mật y tế 100%</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <Award className="w-4 h-4 text-sky-400" />
-                <span>Bác sĩ đầu ngành</span>
-              </div>
+            <div className="flex items-center gap-2 text-xs text-slate-400">
+              <Shield className="w-4 h-4 text-emerald-400" />
+              <span>Bảo mật thông tin y tế theo chuẩn HIPAA</span>
             </div>
           </div>
 
-          {/* Col 3: Điều hướng nhanh */}
+          {/* Quick links */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-              Khám phá nhanh
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200">
+              Dịch vụ khám
             </h4>
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-2 text-xs text-slate-400">
               <li>
-                <button 
-                  onClick={() => onNavigate('home')} 
-                  className="hover:text-medical-400 transition-colors text-left"
-                >
-                  Trang chủ giới thiệu
-                </button>
+                <Link to="/explore?tab=doctors" className="hover:text-sky-400 transition-colors">
+                  Đặt khám Bác sĩ chuyên khoa
+                </Link>
               </li>
               <li>
-                <button 
-                  onClick={() => onNavigate('doctors')} 
-                  className="hover:text-medical-400 transition-colors text-left"
-                >
-                  Danh sách Bác sĩ
-                </button>
+                <Link to="/explore?tab=hospitals" className="hover:text-sky-400 transition-colors">
+                  Đặt khám Bệnh viện & Phòng khám
+                </Link>
               </li>
               <li>
-                <button 
-                  onClick={() => onNavigate('booking')} 
-                  className="hover:text-medical-400 transition-colors text-left"
-                >
-                  Đặt lịch khám bệnh
-                </button>
+                <Link to="/account?tab=bookings" className="hover:text-sky-400 transition-colors">
+                  Tra cứu & Quản lý lịch hẹn
+                </Link>
               </li>
               <li>
-                <button 
-                  onClick={() => onNavigate('history')} 
-                  className="hover:text-medical-400 transition-colors text-left"
-                >
-                  Tra cứu hồ sơ lịch hẹn
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => onNavigate('admin')} 
-                  className="hover:text-medical-400 transition-colors text-left"
-                >
-                  Trang Quản trị phòng khám
-                </button>
+                <span className="text-slate-500">Tư vấn sức khỏe từ xa (Sắp ra mắt)</span>
               </li>
             </ul>
           </div>
 
-          {/* Col 4: Chuyên khoa chính */}
+          {/* Specialities */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200">
               Chuyên khoa tiêu biểu
             </h4>
-            <ul className="space-y-2 text-sm text-slate-400">
-              <li>Tim Mạch can thiệp</li>
-              <li>Da Liễu & Thẩm mỹ</li>
-              <li>Nhi Khoa toàn diện</li>
-              <li>Cơ Xương Khớp</li>
-              <li>Thần Kinh & Giấc ngủ</li>
-              <li>Nha Khoa Thẩm mỹ</li>
-            </ul>
+            <div className="flex flex-wrap gap-1.5">
+              {['Tim mạch', 'Da liễu', 'Nhi khoa', 'Tai Mũi Họng', 'Nội tổng quát', 'Cơ xương khớp'].map(
+                (spec) => (
+                  <span
+                    key={spec}
+                    className="px-2.5 py-1 text-[11px] rounded-lg bg-slate-800 text-slate-300 border border-slate-700/60"
+                  >
+                    {spec}
+                  </span>
+                )
+              )}
+            </div>
           </div>
 
-          {/* Col 5: Liên hệ & Hỗ trợ */}
+          {/* Contact */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200">
               Hỗ trợ 24/7
             </h4>
-            <div className="space-y-2.5 text-sm text-slate-400">
-              <div className="flex items-start gap-2.5">
-                <MapPin className="w-4 h-4 text-medical-400 shrink-0 mt-0.5" />
-                <span>215 Hồng Bàng, P.11, Q.5, TP.HCM</span>
+            <div className="space-y-2 text-xs text-slate-400">
+              <div className="flex items-center gap-2">
+                <Phone className="w-4 h-4 text-sky-400 shrink-0" />
+                <span className="font-semibold text-slate-200">1900 2805 (Tư vấn miễn phí)</span>
               </div>
-              <div className="flex items-center gap-2.5">
-                <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span className="text-white font-semibold">1900 8888 / 028 3855 4269</span>
-              </div>
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-sky-400 shrink-0" />
-                <span>support@medsi.vn</span>
+                <span>hotro@medsi.vn</span>
               </div>
-              <div className="flex items-start gap-2.5">
-                <Clock className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                <span>Thứ 2 - Thứ 7: 07:30 - 17:30<br/>Chủ Nhật: 07:30 - 12:00</span>
+              <div className="flex items-start gap-2">
+                <MapPin className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+                <span>128 Trần Hưng Đạo, Quận 1, TP. Hồ Chí Minh</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>Làm việc: 07:00 - 21:00 (Thứ 2 - CN)</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Bottom bar */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-          <p>© 2026 Medsi Clinic Booking MVP. Đồ án môn Phát triển Ứng dụng Web (IS207).</p>
-          <div className="flex items-center gap-4">
-            <span className="hover:text-slate-400">Frontend-Only (React + LocalStorage)</span>
-            <span>•</span>
-            <span className="hover:text-slate-400">Thiết kế bởi Vũ Tuấn Anh</span>
-          </div>
+        {/* Bottom copyright */}
+        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-3">
+          <p>© {new Date().getFullYear()} MedSi Healthcare Platform. Bản quyền thuộc về MedSi.</p>
+          <p className="text-[11px] text-slate-500">
+            * Hệ thống thử nghiệm prototype frontend - Dữ liệu minh họa lưu trữ cục bộ.
+          </p>
         </div>
       </div>
     </footer>
   );
-};
-
-export default Footer;
+}

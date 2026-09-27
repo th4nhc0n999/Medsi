@@ -1,117 +1,138 @@
-import React, { useState } from 'react';
-import Header from './components/Header';
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import HomePage from './pages/HomePage';
-import DoctorListPage from './pages/DoctorListPage';
-import BookingModalOrPage from './pages/BookingModalOrPage';
-import PatientHistoryPage from './pages/PatientHistoryPage';
-import AdminDashboardPage from './pages/AdminDashboardPage';
-import { useAppointments } from './hooks/useAppointments';
-import { ToastProvider } from './hooks/useToast';
 
-function AppContent() {
-  const [currentTab, setCurrentTab] = useState('home');
+// 6 Core Pages
+import AuthPage from './pages/AuthPage';
+import ExplorePage from './pages/ExplorePage';
+import BookingPage from './pages/BookingPage';
+import PaymentPage from './pages/PaymentPage';
+import AccountPage from './pages/AccountPage';
+import AdminPage from './pages/AdminPage';
 
-  // Navigation params transferred across pages
-  const [navParams, setNavParams] = useState({
-    search: '',
-    specialty: '',
-    doctor: null,
-    phone: '',
-  });
+import { STORAGE_KEYS, getStorage, initInitialStorage } from './utils/storage';
 
-  const {
-    appointments,
-    stats,
-    doctors,
-    createAppointment,
-    updateStatus,
-    deleteAppointment,
-    resetData,
-    getByPhone,
-  } = useAppointments();
+/**
+ * Scroll to top on route navigation
+ */
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [pathname]);
+  return null;
+}
 
-  const handleNavigate = (tabId, params = {}) => {
-    setCurrentTab(tabId);
-    setNavParams((prev) => ({ ...prev, ...params }));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+/**
+ * Root Redirect Handler based on auth state
+ */
+function RootRedirect() {
+  const currentUser = getStorage(STORAGE_KEYS.CURRENT_USER, null);
+  if (!currentUser) {
+    return <Navigate to="/auth" replace />;
+  }
+  if (currentUser.role === 'admin') {
+    return <Navigate to="/admin" replace />;
+  }
+  return <Navigate to="/explore" replace />;
+}
 
-  const handleSelectDoctorForBooking = (doctor) => {
-    setNavParams((prev) => ({ ...prev, doctor }));
-    setCurrentTab('booking');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+/**
+ * Protected Route wrapper for authenticated users
+ */
+function RequireAuth({ children }) {
+  const currentUser = getStorage(STORAGE_KEYS.CURRENT_USER, null);
+  if (!currentUser) {
+    return <Navigate to="/auth" replace />;
+  }
+  return children;
+}
 
-  return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800">
-      {/* Header with real-time pending appointment counter */}
-      <Header
-        currentTab={currentTab}
-        onNavigate={handleNavigate}
-        pendingCount={stats.pending}
-      />
-
-      {/* Main Page Content */}
-      <main className="flex-1">
-        {currentTab === 'home' && (
-          <HomePage
-            onNavigate={handleNavigate}
-            onSelectDoctor={handleSelectDoctorForBooking}
-            doctors={doctors}
-          />
-        )}
-
-        {currentTab === 'doctors' && (
-          <DoctorListPage
-            doctors={doctors}
-            onSelectDoctor={handleSelectDoctorForBooking}
-            initialSpecialty={navParams.specialty}
-            initialSearch={navParams.search}
-          />
-        )}
-
-        {currentTab === 'booking' && (
-          <BookingModalOrPage
-            doctors={doctors}
-            selectedDoctorInitial={navParams.doctor}
-            onBookingSuccess={createAppointment}
-            onNavigate={handleNavigate}
-          />
-        )}
-
-        {currentTab === 'history' && (
-          <PatientHistoryPage
-            initialPhone={navParams.phone}
-            onNavigate={handleNavigate}
-            getByPhone={getByPhone}
-            onCancelAppointment={(id, reason) => updateStatus(id, 'cancelled', reason)}
-          />
-        )}
-
-        {currentTab === 'admin' && (
-          <AdminDashboardPage
-            appointments={appointments}
-            stats={stats}
-            doctors={doctors}
-            onUpdateStatus={updateStatus}
-            onDeleteAppointment={deleteAppointment}
-            onResetData={resetData}
-            onNavigate={handleNavigate}
-          />
-        )}
-      </main>
-
-      {/* Footer */}
-      <Footer onNavigate={handleNavigate} />
-    </div>
-  );
+/**
+ * Protected Route wrapper for Admin users only
+ */
+function RequireAdmin({ children }) {
+  const currentUser = getStorage(STORAGE_KEYS.CURRENT_USER, null);
+  if (!currentUser || currentUser.role !== 'admin') {
+    return <Navigate to="/explore" replace />;
+  }
+  return children;
 }
 
 export default function App() {
+  useEffect(() => {
+    // Initialize seed data if not present in localStorage
+    initInitialStorage();
+  }, []);
+
   return (
-    <ToastProvider>
-      <AppContent />
-    </ToastProvider>
+    <BrowserRouter>
+      <ScrollToTop />
+      <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800 font-sans selection:bg-sky-100 selection:text-sky-900">
+        {/* Global Navigation Bar */}
+        <Navbar />
+
+        {/* Main Application Routes */}
+        <div className="flex-1">
+          <Routes>
+            {/* Default Route */}
+            <Route path="/" element={<RootRedirect />} />
+
+            {/* 1. Auth Page */}
+            <Route path="/auth" element={<AuthPage />} />
+
+            {/* 2. Explore Doctors & Hospitals */}
+            <Route path="/explore" element={<ExplorePage />} />
+
+            {/* 3. Booking Page */}
+            <Route
+              path="/booking/:type/:id"
+              element={
+                <RequireAuth>
+                  <BookingPage />
+                </RequireAuth>
+              }
+            />
+
+            {/* 4. Payment Page */}
+            <Route
+              path="/payment"
+              element={
+                <RequireAuth>
+                  <PaymentPage />
+                </RequireAuth>
+              }
+            />
+
+            {/* 5. Account Page */}
+            <Route
+              path="/account"
+              element={
+                <RequireAuth>
+                  <AccountPage />
+                </RequireAuth>
+              }
+            />
+
+            {/* 6. Admin Page */}
+            <Route
+              path="/admin"
+              element={
+                <RequireAdmin>
+                  <AdminPage />
+                </RequireAdmin>
+              }
+            />
+
+            {/* Fallback to root */}
+            <Route path="*" element={<RootRedirect />} />
+          </Routes>
+        </div>
+
+        {/* Global Footer */}
+        <Footer />
+      </div>
+    </BrowserRouter>
   );
 }

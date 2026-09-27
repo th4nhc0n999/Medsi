@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Activity,
   LogIn,
@@ -18,6 +18,7 @@ import { generateUniqueId } from '../utils/generateCode';
 
 export default function AuthPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLoginTab, setIsLoginTab] = useState(true);
 
   // Login form state
@@ -34,17 +35,22 @@ export default function AuthPage() {
   const [regErrors, setRegErrors] = useState({});
   const [regSuccess, setRegSuccess] = useState('');
 
+  // Target destination if redirected from a protected route
+  const from = location.state?.from?.pathname || '';
+
   // If already logged in, redirect
   useEffect(() => {
     const currentUser = getStorage(STORAGE_KEYS.CURRENT_USER, null);
     if (currentUser) {
-      if (currentUser.role === 'admin') {
-        navigate('/admin');
+      if (from) {
+        navigate(from, { replace: true });
+      } else if (currentUser.role === 'admin') {
+        navigate('/admin', { replace: true });
       } else {
-        navigate('/explore');
+        navigate('/explore', { replace: true });
       }
     }
-  }, [navigate]);
+  }, [navigate, from]);
 
   // Quick Demo account fill
   const handleQuickLogin = (email, password) => {
@@ -82,10 +88,12 @@ export default function AuthPage() {
     // Set currentUser
     setStorage(STORAGE_KEYS.CURRENT_USER, foundUser);
 
-    if (foundUser.role === 'admin') {
-      navigate('/admin');
+    if (from) {
+      navigate(from, { replace: true });
+    } else if (foundUser.role === 'admin') {
+      navigate('/admin', { replace: true });
     } else {
-      navigate('/explore');
+      navigate('/explore', { replace: true });
     }
   };
 
@@ -162,7 +170,7 @@ export default function AuthPage() {
     setStorage(STORAGE_KEYS.CURRENT_USER, newUser);
     setRegSuccess('Đăng ký tài khoản thành công! Đang chuyển hướng...');
     setTimeout(() => {
-      navigate('/explore');
+      navigate(from || '/explore', { replace: true });
     }, 800);
   };
 

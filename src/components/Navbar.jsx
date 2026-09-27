@@ -12,6 +12,7 @@ import {
   Stethoscope,
   Building2,
   ChevronDown,
+  Search,
 } from 'lucide-react';
 import { STORAGE_KEYS, getStorage, removeStorage } from '../utils/storage';
 
@@ -111,13 +112,24 @@ export default function Navbar() {
                   <Building2 className="w-4 h-4 text-cyan-600" />
                   Khám bệnh viện
                 </Link>
+                <Link
+                  to="/lookup"
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                    isActive('/lookup')
+                      ? 'bg-sky-50 text-sky-700'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  <Search className="w-4 h-4 text-amber-600" />
+                  Tra cứu lịch hẹn
+                </Link>
                 {currentUser && (
                   <Link
                     to="/account?tab=bookings"
                     className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all"
                   >
                     <Calendar className="w-4 h-4 text-emerald-600" />
-                    Lịch khám
+                    Lịch khám của tôi
                   </Link>
                 )}
               </>
@@ -230,6 +242,14 @@ export default function Navbar() {
               >
                 <Building2 className="w-5 h-5 text-cyan-600" />
                 Khám bệnh viện
+              </Link>
+              <Link
+                to="/lookup"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-sky-50 hover:text-sky-700"
+              >
+                <Search className="w-5 h-5 text-amber-600" />
+                Tra cứu lịch hẹn
               </Link>
               {currentUser && (
                 <Link

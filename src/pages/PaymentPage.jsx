@@ -23,6 +23,7 @@ export default function PaymentPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [createdBooking, setCreatedBooking] = useState(null);
+  const [conflictError, setConflictError] = useState('');
 
   // Load draft from localStorage
   useEffect(() => {
@@ -70,9 +71,29 @@ export default function PaymentPage() {
 
   const handleProcessPayment = () => {
     setIsProcessing(true);
+    setConflictError('');
 
     // Simulate 800ms payment gateway verification
     setTimeout(() => {
+      // Re-verify that the slot is not taken before creating booking
+      const existingBookings = getStorage(STORAGE_KEYS.BOOKINGS, []);
+      const isSlotConflict = existingBookings.some(
+        (b) =>
+          b.date === draft.date &&
+          b.startTime === draft.startTime &&
+          b.status !== 'cancelled' &&
+          ((draft.doctorId && b.doctorId === draft.doctorId) ||
+           (draft.hospitalId && b.hospitalId === draft.hospitalId))
+      );
+
+      if (isSlotConflict) {
+        setIsProcessing(false);
+        setConflictError(
+          `Rất tiếc! Khung giờ ${draft.startTime} ngày ${draft.date} vừa có người khác đặt trước. Vui lòng quay lại để chọn khung giờ khác!`
+        );
+        return;
+      }
+
       const isPaidOnline = selectedMethod !== 'onsite';
       const newBookingId = generateUniqueId('bk');
       const bookingCode = generateBookingCode();
@@ -110,7 +131,6 @@ export default function PaymentPage() {
       };
 
       // Save to localStorage: bookings
-      const existingBookings = getStorage(STORAGE_KEYS.BOOKINGS, []);
       existingBookings.unshift(newBooking);
       setStorage(STORAGE_KEYS.BOOKINGS, existingBookings);
 
@@ -168,6 +188,21 @@ export default function PaymentPage() {
             Mã tham chiếu tạm thời sẽ được cấp ngay sau khi giao dịch thành công
           </p>
         </div>
+
+        {conflictError && (
+          <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs sm:text-sm font-semibold flex items-center justify-between gap-3 animate-fade-in shadow-xs">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
+              <span>{conflictError}</span>
+            </div>
+            <Link
+              to={draft.bookingType === 'doctor' ? `/booking/doctor/${draft.doctorId}` : `/booking/hospital/${draft.hospitalId}`}
+              className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shrink-0 transition-colors"
+            >
+              Chọn lại giờ
+            </Link>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
           {/* LEFT: Choose Payment Method (7 cols) */}

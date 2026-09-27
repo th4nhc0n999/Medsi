@@ -5,7 +5,7 @@ import { formatCurrency } from '../utils/formatCurrency';
 
 export default function BookingCard({ booking, onCancelRequest = null }) {
   const isDoctor = booking.bookingType === 'doctor';
-  const canCancel = booking.status === 'pending';
+  const canCancel = booking.status === 'pending' || booking.status === 'approved';
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200/90 hover:border-slate-300 shadow-xs hover:shadow-md transition-all p-5 sm:p-6">

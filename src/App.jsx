@@ -3,13 +3,14 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
-// 6 Core Pages
+// Core Pages
 import AuthPage from './pages/AuthPage';
 import ExplorePage from './pages/ExplorePage';
 import BookingPage from './pages/BookingPage';
 import PaymentPage from './pages/PaymentPage';
 import AccountPage from './pages/AccountPage';
 import AdminPage from './pages/AdminPage';
+import LookupPage from './pages/LookupPage';
 
 import { STORAGE_KEYS, getStorage, initInitialStorage } from './utils/storage';
 
@@ -25,26 +26,24 @@ function ScrollToTop() {
 }
 
 /**
- * Root Redirect Handler based on auth state
+ * Root Redirect Handler: Admin to /admin, others directly to /explore (NO forced login)
  */
 function RootRedirect() {
   const currentUser = getStorage(STORAGE_KEYS.CURRENT_USER, null);
-  if (!currentUser) {
-    return <Navigate to="/auth" replace />;
-  }
-  if (currentUser.role === 'admin') {
+  if (currentUser && currentUser.role === 'admin') {
     return <Navigate to="/admin" replace />;
   }
   return <Navigate to="/explore" replace />;
 }
 
 /**
- * Protected Route wrapper for authenticated users
+ * Protected Route wrapper for authenticated users, preserving target location
  */
 function RequireAuth({ children }) {
+  const location = useLocation();
   const currentUser = getStorage(STORAGE_KEYS.CURRENT_USER, null);
   if (!currentUser) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/auth" state={{ from: location }} replace />;
   }
   return children;
 }
@@ -79,13 +78,16 @@ export default function App() {
             {/* Default Route */}
             <Route path="/" element={<RootRedirect />} />
 
-            {/* 1. Auth Page */}
-            <Route path="/auth" element={<AuthPage />} />
-
-            {/* 2. Explore Doctors & Hospitals */}
+            {/* 1. Explore Doctors & Hospitals (Public Landing) */}
             <Route path="/explore" element={<ExplorePage />} />
 
-            {/* 3. Booking Page */}
+            {/* 2. Public Appointment Lookup by Phone */}
+            <Route path="/lookup" element={<LookupPage />} />
+
+            {/* 3. Auth Page (Login / Register) */}
+            <Route path="/auth" element={<AuthPage />} />
+
+            {/* 4. Booking Page */}
             <Route
               path="/booking/:type/:id"
               element={
@@ -95,7 +97,7 @@ export default function App() {
               }
             />
 
-            {/* 4. Payment Page */}
+            {/* 5. Payment Page */}
             <Route
               path="/payment"
               element={
@@ -105,7 +107,7 @@ export default function App() {
               }
             />
 
-            {/* 5. Account Page */}
+            {/* 6. Account Page (User Profile & Bookings) */}
             <Route
               path="/account"
               element={
@@ -115,7 +117,7 @@ export default function App() {
               }
             />
 
-            {/* 6. Admin Page */}
+            {/* 7. Admin Dashboard */}
             <Route
               path="/admin"
               element={

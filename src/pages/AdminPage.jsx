@@ -17,10 +17,16 @@ import {
   User,
   Building2,
   Stethoscope,
+  Trash2,
+  XCircle,
+  RotateCcw,
+  Download,
+  AlertTriangle,
+  X,
 } from 'lucide-react';
 import StatusBadge from '../components/StatusBadge';
 import Modal from '../components/Modal';
-import { STORAGE_KEYS, getStorage, setStorage } from '../utils/storage';
+import { STORAGE_KEYS, getStorage, setStorage, resetToInitialStorage } from '../utils/storage';
 import { formatCurrency } from '../utils/formatCurrency';
 
 export default function AdminPage() {
@@ -32,6 +38,20 @@ export default function AdminPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'pending' | 'approved' | 'completed' | 'cancelled'
   const [selectedBookingForView, setSelectedBookingForView] = useState(null);
+
+  // Action Modals State
+  const [bookingToCancel, setBookingToCancel] = useState(null);
+  const [cancelReason, setCancelReason] = useState('');
+  const [bookingToDelete, setBookingToDelete] = useState(null);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
+
+  const showToast = (message, type = 'success') => {
+    setToastMessage({ message, type });
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 3500);
+  };
 
   // Check auth & role
   useEffect(() => {
@@ -73,6 +93,7 @@ export default function AdminPage() {
       existingPayment.status = 'paid';
       setStorage(STORAGE_KEYS.PAYMENTS, allPayments);
     }
+    showToast('Đã cập nhật trạng thái thanh toán thành công');
   };
 
   // 2. Approve Booking: pending -> approved
@@ -91,6 +112,10 @@ export default function AdminPage() {
 
     setStorage(STORAGE_KEYS.BOOKINGS, updated);
     setBookings(updated);
+    if (selectedBookingForView && selectedBookingForView.id === bookingId) {
+      setSelectedBookingForView((prev) => ({ ...prev, status: 'approved' }));
+    }
+    showToast('Đã phê duyệt lịch khám thành công');
   };
 
   // 3. Complete Booking: approved -> completed
@@ -109,6 +134,127 @@ export default function AdminPage() {
 
     setStorage(STORAGE_KEYS.BOOKINGS, updated);
     setBookings(updated);
+    if (selectedBookingForView && selectedBookingForView.id === bookingId) {
+      setSelectedBookingForView((prev) => ({ ...prev, status: 'completed' }));
+    }
+    showToast('Đã hoàn tất ca khám');
+  };
+
+  // 4. Cancel Booking with Reason
+  const handleConfirmCancel = () => {
+    if (!bookingToCancel) return;
+    const finalReason = cancelReason.trim() || 'Hủy theo yêu cầu của Quản trị viên';
+    const allBookings = getStorage(STORAGE_KEYS.BOOKINGS, []);
+    const updated = allBookings.map((b) => {
+      if (b.id === bookingToCancel.id) {
+        return {
+          ...b,
+          status: 'cancelled',
+          cancelledAt: new Date().toISOString(),
+          cancelReason: finalReason,
+        };
+      }
+      return b;
+    });
+
+    setStorage(STORAGE_KEYS.BOOKINGS, updated);
+    setBookings(updated);
+    if (selectedBookingForView && selectedBookingForView.id === bookingToCancel.id) {
+      setSelectedBookingForView((prev) => ({
+        ...prev,
+        status: 'cancelled',
+        cancelReason: finalReason,
+      }));
+    }
+    setBookingToCancel(null);
+    setCancelReason('');
+    showToast(`Đã hủy lịch hẹn ${bookingToCancel.code}`);
+  };
+
+  // 5. Delete Booking Permanently
+  const handleConfirmDelete = () => {
+    if (!bookingToDelete) return;
+    const allBookings = getStorage(STORAGE_KEYS.BOOKINGS, []);
+    const updated = allBookings.filter((b) => b.id !== bookingToDelete.id);
+
+    setStorage(STORAGE_KEYS.BOOKINGS, updated);
+    setBookings(updated);
+    if (selectedBookingForView && selectedBookingForView.id === bookingToDelete.id) {
+      setSelectedBookingForView(null);
+    }
+    setBookingToDelete(null);
+    showToast(`Đã xóa hoàn toàn lịch hẹn ${bookingToDelete.code}`);
+  };
+
+  // 6. Reset Demo Data
+  const handleConfirmReset = () => {
+    resetToInitialStorage();
+    loadBookings();
+    setShowResetModal(false);
+    showToast('Đã khôi phục toàn bộ dữ liệu mẫu ban đầu thành công!');
+  };
+
+  // 7. Export Bookings to CSV
+  const handleExportCSV = () => {
+    const listToExport = filteredBookings.length > 0 ? filteredBookings : bookings;
+    if (listToExport.length === 0) {
+      showToast('Không có dữ liệu lịch khám để xuất', 'warning');
+      return;
+    }
+
+    const headers = [
+      'Mã lịch hẹn',
+      'Họ tên bệnh nhân',
+      'Số điện thoại',
+      'Bác sĩ / Cơ sở y tế',
+      'Chuyên khoa',
+      'Ngày khám',
+      'Khung giờ',
+      'Tổng chi phí (VND)',
+      'Thanh toán',
+      'Trạng thái',
+      'Lý do hủy (nếu có)',
+      'Ngày tạo',
+    ];
+
+    const rows = listToExport.map((b) => [
+      `"${b.code || ''}"`,
+      `"${b.patientName || ''}"`,
+      `"${b.patientPhone || ''}"`,
+      `"${(b.providerName || '').replace(/"/g, '""')}"`,
+      `"${(b.specialtyName || '').replace(/"/g, '""')}"`,
+      `"${b.date || ''}"`,
+      `"${b.startTime || ''} - ${b.endTime || ''}"`,
+      `"${b.totalAmount || 0}"`,
+      `"${b.paymentStatus === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán'}"`,
+      `"${
+        b.status === 'approved'
+          ? 'Đã duyệt'
+          : b.status === 'completed'
+          ? 'Hoàn thành'
+          : b.status === 'cancelled'
+          ? 'Đã hủy'
+          : 'Chờ duyệt'
+      }"`,
+      `"${(b.cancelReason || '').replace(/"/g, '""')}"`,
+      `"${b.createdAt || ''}"`,
+    ]);
+
+    const csvContent =
+      '\uFEFF' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute(
+      'download',
+      `medsi_danh_sach_lich_kham_${new Date().toISOString().slice(0, 10)}.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast(`Đã xuất file CSV với ${listToExport.length} lịch khám`);
   };
 
   // Stats calculation
@@ -137,6 +283,31 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-slate-50/70 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-6">
+        {/* Toast Alert Notification */}
+        {toastMessage && (
+          <div
+            className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-2xl shadow-xl border text-xs sm:text-sm font-bold transition-all animate-bounce ${
+              toastMessage.type === 'warning'
+                ? 'bg-amber-50 text-amber-900 border-amber-300'
+                : 'bg-emerald-50 text-emerald-900 border-emerald-300'
+            }`}
+          >
+            {toastMessage.type === 'warning' ? (
+              <AlertTriangle className="w-4 h-4 text-amber-600" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            )}
+            <span>{toastMessage.message}</span>
+            <button
+              type="button"
+              onClick={() => setToastMessage(null)}
+              className="ml-2 text-slate-400 hover:text-slate-700"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -152,14 +323,36 @@ export default function AdminPage() {
             </p>
           </div>
 
-          <button
-            onClick={loadBookings}
-            type="button"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
-          >
-            <RefreshCw className="w-3.5 h-3.5 text-sky-600" />
-            <span>Làm mới dữ liệu</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={handleExportCSV}
+              type="button"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 text-emerald-800 text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+              title="Xuất file danh sách lịch hẹn ra Excel / CSV"
+            >
+              <Download className="w-3.5 h-3.5 text-emerald-700" />
+              <span>Xuất CSV</span>
+            </button>
+
+            <button
+              onClick={() => setShowResetModal(true)}
+              type="button"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+              title="Khôi phục lại toàn bộ dữ liệu mẫu ban đầu để chấm bài / demo"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-rose-600" />
+              <span>Khôi phục dữ liệu mẫu</span>
+            </button>
+
+            <button
+              onClick={loadBookings}
+              type="button"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-sky-600" />
+              <span>Làm mới</span>
+            </button>
+          </div>
         </div>
 
         {/* Dashboard 5 Metrics Cards */}
@@ -292,6 +485,7 @@ export default function AdminPage() {
                     const isPaid = b.paymentStatus === 'paid';
                     const isPending = b.status === 'pending';
                     const isApproved = b.status === 'approved';
+                    const canCancel = b.status !== 'cancelled' && b.status !== 'completed';
 
                     return (
                       <tr key={b.id} className="hover:bg-slate-50/80 transition-colors">
@@ -348,6 +542,11 @@ export default function AdminPage() {
                         {/* Booking Status */}
                         <td className="py-4 px-4 text-center whitespace-nowrap">
                           <StatusBadge status={b.status} type="booking" />
+                          {b.status === 'cancelled' && b.cancelReason && (
+                            <div className="text-[10px] text-rose-600 mt-1 max-w-[120px] truncate mx-auto" title={b.cancelReason}>
+                              {b.cancelReason}
+                            </div>
+                          )}
                         </td>
 
                         {/* Admin Workflow Actions */}
@@ -369,9 +568,10 @@ export default function AdminPage() {
                                 onClick={() => handleApproveBooking(b.id)}
                                 type="button"
                                 className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-white bg-sky-600 hover:bg-sky-700 rounded-lg shadow-xs transition-colors cursor-pointer"
+                                title="Phê duyệt lịch khám"
                               >
                                 <Check className="w-3.5 h-3.5" />
-                                <span>Duyệt lịch</span>
+                                <span>Duyệt</span>
                               </button>
                             )}
 
@@ -381,11 +581,37 @@ export default function AdminPage() {
                                 onClick={() => handleCompleteBooking(b.id)}
                                 type="button"
                                 className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-xs transition-colors cursor-pointer"
+                                title="Hoàn tất ca khám"
                               >
                                 <CheckCircle2 className="w-3.5 h-3.5" />
                                 <span>Hoàn tất</span>
                               </button>
                             )}
+
+                            {/* Cancel Button */}
+                            {canCancel && (
+                              <button
+                                onClick={() => {
+                                  setBookingToCancel(b);
+                                  setCancelReason('');
+                                }}
+                                type="button"
+                                className="p-1.5 text-amber-500 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer"
+                                title="Hủy lịch hẹn"
+                              >
+                                <XCircle className="w-4 h-4" />
+                              </button>
+                            )}
+
+                            {/* Delete Button */}
+                            <button
+                              onClick={() => setBookingToDelete(b)}
+                              type="button"
+                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                              title="Xóa lịch hẹn vĩnh viễn"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -429,7 +655,32 @@ export default function AdminPage() {
                   {selectedBookingForView.startTime} - {selectedBookingForView.endTime} ngày {selectedBookingForView.date}
                 </span>
               </div>
+              <div className="flex justify-between items-center pt-1">
+                <span className="text-slate-500">Trạng thái duyệt:</span>
+                <StatusBadge status={selectedBookingForView.status} type="booking" />
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500">Thanh toán:</span>
+                <StatusBadge status={selectedBookingForView.paymentStatus} type="payment" />
+              </div>
             </div>
+
+            {selectedBookingForView.status === 'cancelled' && (
+              <div className="p-3.5 bg-rose-50 rounded-2xl border border-rose-200 text-rose-800 space-y-1">
+                <span className="font-bold flex items-center gap-1.5 text-rose-900">
+                  <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                  Lịch hẹn đã bị hủy:
+                </span>
+                <p className="text-xs text-rose-700">
+                  Lý do: {selectedBookingForView.cancelReason || 'Không có lý do cụ thể'}
+                </p>
+                {selectedBookingForView.cancelledAt && (
+                  <p className="text-[11px] text-rose-500">
+                    Thời điểm hủy: {new Date(selectedBookingForView.cancelledAt).toLocaleString('vi-VN')}
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
               <div className="flex justify-between">
@@ -467,17 +718,211 @@ export default function AdminPage() {
               </div>
             </div>
 
-            <div className="pt-2 flex justify-end">
+            {/* Admin actions inside detail */}
+            <div className="pt-2 flex flex-wrap items-center justify-between gap-2 border-t border-slate-200">
+              <div className="flex items-center gap-1.5">
+                {selectedBookingForView.paymentStatus !== 'paid' && (
+                  <button
+                    type="button"
+                    onClick={() => handleMarkPaid(selectedBookingForView.id)}
+                    className="px-2.5 py-1.5 bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-300 font-bold rounded-xl text-xs transition-colors"
+                  >
+                    Xác nhận đã trả tiền
+                  </button>
+                )}
+
+                {selectedBookingForView.status === 'pending' && (
+                  <button
+                    type="button"
+                    onClick={() => handleApproveBooking(selectedBookingForView.id)}
+                    className="px-2.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl text-xs transition-colors"
+                  >
+                    Duyệt lịch
+                  </button>
+                )}
+
+                {selectedBookingForView.status === 'approved' && (
+                  <button
+                    type="button"
+                    onClick={() => handleCompleteBooking(selectedBookingForView.id)}
+                    className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-colors"
+                  >
+                    Hoàn tất
+                  </button>
+                )}
+
+                {selectedBookingForView.status !== 'cancelled' &&
+                  selectedBookingForView.status !== 'completed' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBookingToCancel(selectedBookingForView);
+                        setCancelReason('');
+                      }}
+                      className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 font-bold rounded-xl text-xs transition-colors"
+                    >
+                      Hủy lịch
+                    </button>
+                  )}
+
+                <button
+                  type="button"
+                  onClick={() => setBookingToDelete(selectedBookingForView)}
+                  className="px-2.5 py-1.5 text-slate-500 hover:text-rose-700 font-bold rounded-xl text-xs transition-colors"
+                >
+                  Xóa
+                </button>
+              </div>
+
               <button
                 type="button"
                 onClick={() => setSelectedBookingForView(null)}
-                className="px-4 py-2 bg-slate-800 text-white font-bold rounded-xl text-xs"
+                className="px-4 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs"
               >
                 Đóng
               </button>
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* CANCEL BOOKING MODAL */}
+      <Modal
+        isOpen={Boolean(bookingToCancel)}
+        onClose={() => setBookingToCancel(null)}
+        title="Xác nhận hủy lịch khám"
+        subtitle={`Mã lịch hẹn: ${bookingToCancel?.code} - ${bookingToCancel?.patientName}`}
+        maxWidth="max-w-md"
+      >
+        <div className="space-y-4 text-xs sm:text-sm">
+          <p className="text-slate-600">
+            Bạn có chắc chắn muốn hủy lịch hẹn này? Vui lòng chọn hoặc nhập lý do hủy lịch:
+          </p>
+
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              'Bác sĩ bận lịch đột xuất',
+              'Bệnh nhân liên hệ xin hủy',
+              'Trùng khung giờ khám khác',
+              'Thông tin bệnh nhân chưa hợp lệ',
+            ].map((reason) => (
+              <button
+                key={reason}
+                type="button"
+                onClick={() => setCancelReason(reason)}
+                className={`px-2.5 py-1 text-xs rounded-lg border transition-colors cursor-pointer ${
+                  cancelReason === reason
+                    ? 'bg-rose-100 border-rose-400 text-rose-800 font-bold'
+                    : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                {reason}
+              </button>
+            ))}
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Lý do chi tiết:
+            </label>
+            <textarea
+              rows={3}
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="Nhập lý do hủy lịch hẹn..."
+              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-hidden focus:border-rose-500 focus:bg-white resize-none"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => setBookingToCancel(null)}
+              className="px-3.5 py-2 text-slate-600 hover:bg-slate-100 rounded-xl font-bold text-xs"
+            >
+              Hủy bỏ
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmCancel}
+              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-xs shadow-xs"
+            >
+              Xác nhận hủy lịch
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* DELETE BOOKING PERMANENTLY MODAL */}
+      <Modal
+        isOpen={Boolean(bookingToDelete)}
+        onClose={() => setBookingToDelete(null)}
+        title="Xác nhận xóa vĩnh viễn"
+        subtitle={`Mã lịch hẹn: ${bookingToDelete?.code}`}
+        maxWidth="max-w-md"
+      >
+        <div className="space-y-4 text-xs sm:text-sm">
+          <div className="p-3.5 bg-rose-50 rounded-2xl border border-rose-200 flex items-start gap-2 text-rose-800">
+            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+            <p className="text-xs leading-relaxed">
+              <strong>Cảnh báo:</strong> Lịch khám mã <strong>{bookingToDelete?.code}</strong> của bệnh nhân{' '}
+              <strong>{bookingToDelete?.patientName}</strong> sẽ bị xóa vĩnh viễn khỏi hệ thống và không thể phục hồi.
+            </p>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => setBookingToDelete(null)}
+              className="px-3.5 py-2 text-slate-600 hover:bg-slate-100 rounded-xl font-bold text-xs"
+            >
+              Đóng
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmDelete}
+              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-xs shadow-xs"
+            >
+              Xác nhận xóa
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* RESET DEMO DATA MODAL */}
+      <Modal
+        isOpen={showResetModal}
+        onClose={() => setShowResetModal(false)}
+        title="Khôi phục dữ liệu mẫu ban đầu"
+        subtitle="Dành cho giám khảo / test đồ án"
+        maxWidth="max-w-md"
+      >
+        <div className="space-y-4 text-xs sm:text-sm">
+          <div className="p-3.5 bg-amber-50 rounded-2xl border border-amber-200 flex items-start gap-2 text-amber-900">
+            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <p className="text-xs leading-relaxed">
+              Hệ thống sẽ nạp lại toàn bộ tài khoản mẫu, hồ sơ bệnh nhân, lịch hẹn mẫu và giao dịch ban đầu.
+              Mọi lịch khám bạn vừa tạo mới sẽ được thay thế bằng dữ liệu demo chuẩn.
+            </p>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => setShowResetModal(false)}
+              className="px-3.5 py-2 text-slate-600 hover:bg-slate-100 rounded-xl font-bold text-xs"
+            >
+              Hủy bỏ
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmReset}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs shadow-xs"
+            >
+              Khôi phục ngay
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

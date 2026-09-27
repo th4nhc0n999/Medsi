@@ -1,4 +1,4 @@
-# MediBook - Hệ Thống Đặt Lịch Khám Bệnh Trực Tuyến (Mini Project MVP)
+# Medsi - Hệ Thống Đặt Lịch Khám Bệnh Trực Tuyến (Mini Project MVP)
 
 > **Đồ án môn học:** Phát triển Ứng dụng Web (IS207)  
 > **Kiến trúc:** Frontend-Only Single Page Application (React 18 + Vite + Tailwind CSS + LocalStorage)  
@@ -9,7 +9,7 @@
 
 ## 🌟 1. Giới Thiệu Dự Án
 
-**MediBook** là nền tảng đặt lịch khám bệnh trực tuyến được xây dựng theo tiêu chuẩn MVP (Minimum Viable Product) hoàn chỉnh, giao diện hiện đại mang đậm phong cách y tế cao cấp (Tone màu *Medical Blue* `#0284c7`, trắng sạch sẽ, viền bo mềm mại, bóng mịn).
+**Medsi** là nền tảng đặt lịch khám bệnh trực tuyến được xây dựng theo tiêu chuẩn MVP (Minimum Viable Product) hoàn chỉnh, giao diện hiện đại mang đậm phong cách y tế cao cấp (Tone màu *Medical Blue* `#0284c7`, trắng sạch sẽ, viền bo mềm mại, bóng mịn).
 
 Ứng dụng hoạt động độc lập không phụ thuộc vào backend server, toàn bộ dữ liệu lịch hẹn, bác sĩ, và thống kê doanh thu được quản trị và lưu trữ bền vững qua **`localStorage` (Web Storage)**. Hệ thống có sẵn bộ dữ liệu mẫu (Seed Data) phong phú để giảng viên và người dùng trải nghiệm ngay lập tức.
 

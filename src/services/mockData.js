@@ -92,7 +92,7 @@ export const DOCTORS = [
     rating: 4.9,
     reviewCount: 382,
     consultationFee: 500000,
-    hospital: 'Bệnh viện Tim Tâm Đức - Phòng khám MediBook',
+    hospital: 'Bệnh viện Tim Tâm Đức - Phòng khám Medsi',
     address: '215 Hồng Bàng, Phường 11, Quận 5, TP.HCM',
     avatar: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=600&q=80',
     bio: 'Chuyên gia đầu ngành về can thiệp tim mạch, điều trị suy tim và xơ vữa động mạch với hơn 24 năm cống hiến y học.',

@@ -23,7 +23,7 @@ export const Footer = ({ onNavigate }) => {
                 <HeartPulse className="w-6 h-6" />
               </div>
               <span className="text-2xl font-black tracking-tight text-white">
-                Medi<span className="text-medical-400">Book</span>
+                Med<span className="text-medical-400">si</span>
               </span>
             </div>
             <p className="text-sm text-slate-400 leading-relaxed pr-6">
@@ -121,7 +121,7 @@ export const Footer = ({ onNavigate }) => {
               </div>
               <div className="flex items-center gap-2.5">
                 <Mail className="w-4 h-4 text-sky-400 shrink-0" />
-                <span>support@medibook.vn</span>
+                <span>support@medsi.vn</span>
               </div>
               <div className="flex items-start gap-2.5">
                 <Clock className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
@@ -133,7 +133,7 @@ export const Footer = ({ onNavigate }) => {
 
         {/* Bottom bar */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-          <p>© 2026 MediBook Clinic Booking MVP. Đồ án môn Phát triển Ứng dụng Web (IS207).</p>
+          <p>© 2026 Medsi Clinic Booking MVP. Đồ án môn Phát triển Ứng dụng Web (IS207).</p>
           <div className="flex items-center gap-4">
             <span className="hover:text-slate-400">Frontend-Only (React + LocalStorage)</span>
             <span>•</span>

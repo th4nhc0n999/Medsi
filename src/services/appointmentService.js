@@ -1,7 +1,8 @@
 import { INITIAL_APPOINTMENTS, DOCTORS } from './mockData';
 
-const STORAGE_KEY = 'medibook_appointments_v1';
-const DOCTORS_STORAGE_KEY = 'medibook_doctors_v1';
+const STORAGE_KEY = 'medsi_appointments_v1';
+const DOCTORS_STORAGE_KEY = 'medsi_doctors_v1';
+const STORAGE_EVENT = 'medsi_storage_change';
 
 class AppointmentService {
   constructor() {
@@ -10,9 +11,19 @@ class AppointmentService {
 
   initStorage() {
     try {
+      // Auto-migrate from previous storage key if present
+      const oldAppointments = localStorage.getItem('medibook_appointments_v1');
+      if (oldAppointments && !localStorage.getItem(STORAGE_KEY)) {
+        localStorage.setItem(STORAGE_KEY, oldAppointments);
+      }
       const stored = localStorage.getItem(STORAGE_KEY);
       if (!stored) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_APPOINTMENTS));
+      }
+
+      const oldDoctors = localStorage.getItem('medibook_doctors_v1');
+      if (oldDoctors && !localStorage.getItem(DOCTORS_STORAGE_KEY)) {
+        localStorage.setItem(DOCTORS_STORAGE_KEY, oldDoctors);
       }
       const storedDoctors = localStorage.getItem(DOCTORS_STORAGE_KEY);
       if (!storedDoctors) {
@@ -122,7 +133,7 @@ class AppointmentService {
 
       const updatedList = [newAppointment, ...all];
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedList));
-      window.dispatchEvent(new Event('medibook_storage_change'));
+      window.dispatchEvent(new Event(STORAGE_EVENT));
 
       return newAppointment;
     } catch (e) {
@@ -146,7 +157,7 @@ class AppointmentService {
       };
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
-      window.dispatchEvent(new Event('medibook_storage_change'));
+      window.dispatchEvent(new Event(STORAGE_EVENT));
       return all[index];
     } catch (e) {
       console.error('Error updating appointment status', e);
@@ -160,7 +171,7 @@ class AppointmentService {
       const all = this.getAll();
       const filtered = all.filter(item => item.id !== id);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
-      window.dispatchEvent(new Event('medibook_storage_change'));
+      window.dispatchEvent(new Event(STORAGE_EVENT));
       return true;
     } catch (e) {
       console.error('Error deleting appointment', e);
@@ -172,7 +183,7 @@ class AppointmentService {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_APPOINTMENTS));
       localStorage.setItem(DOCTORS_STORAGE_KEY, JSON.stringify(DOCTORS));
-      window.dispatchEvent(new Event('medibook_storage_change'));
+      window.dispatchEvent(new Event(STORAGE_EVENT));
       return true;
     } catch (e) {
       console.error('Error resetting mock data', e);

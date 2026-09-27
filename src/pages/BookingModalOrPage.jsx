@@ -84,7 +84,11 @@ export const BookingModalOrPage = ({
   const occupiedSlots = useMemo(() => {
     if (!selectedDoctorId || !appointmentDate) return [];
     try {
-      const stored = JSON.parse(localStorage.getItem('medibook_appointments_v1') || '[]');
+      const stored = JSON.parse(
+        localStorage.getItem('medsi_appointments_v1') || 
+        localStorage.getItem('medibook_appointments_v1') || 
+        '[]'
+      );
       return stored
         .filter(
           (item) =>
@@ -221,7 +225,7 @@ export const BookingModalOrPage = ({
               ĐẶT LỊCH THÀNH CÔNG
             </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-3">
-              Cảm ơn bạn đã tin chọn MediBook!
+              Cảm ơn bạn đã tin chọn Medsi!
             </h2>
             <p className="text-slate-600 text-xs sm:text-sm mt-1">
               Hệ thống phòng khám đã tiếp nhận yêu cầu đặt hẹn và sẽ liên hệ xác nhận trong thời gian sớm nhất.

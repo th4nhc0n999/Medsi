@@ -71,7 +71,7 @@ export const Header = ({ currentTab, onNavigate, pendingCount = 0 }) => {
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-medical-700 to-medical-500 bg-clip-text text-transparent">
-                  MediBook
+                  Medsi
                 </span>
                 <span className="bg-medical-50 text-medical-700 text-[10px] font-bold px-1.5 py-0.5 rounded-md border border-medical-200">
                   MVP

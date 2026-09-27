@@ -384,7 +384,7 @@ export const HomePage = ({ onNavigate, onSelectDoctor, doctors = [] }) => {
         </div>
       </section>
 
-      {/* 5. VÌ SAO CHỌN MEDIBOOK */}
+      {/* 5. VÌ SAO CHỌN MEDSI */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-soft">

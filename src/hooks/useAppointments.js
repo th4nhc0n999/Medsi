@@ -34,10 +34,12 @@ export const useAppointments = (initialFilters = {}) => {
       refresh();
     };
 
+    window.addEventListener('medsi_storage_change', handleStorageChange);
     window.addEventListener('medibook_storage_change', handleStorageChange);
     window.addEventListener('storage', handleStorageChange);
 
     return () => {
+      window.removeEventListener('medsi_storage_change', handleStorageChange);
       window.removeEventListener('medibook_storage_change', handleStorageChange);
       window.removeEventListener('storage', handleStorageChange);
     };

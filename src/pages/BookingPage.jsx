@@ -23,6 +23,7 @@ import PatientProfileCard from '../components/PatientProfileCard';
 import Modal from '../components/Modal';
 import { DOCTORS } from '../data/doctors';
 import { HOSPITALS } from '../data/hospitals';
+import { isSlotPast } from '../data/slots';
 import { STORAGE_KEYS, getStorage, setStorage } from '../utils/storage';
 import { formatCurrency } from '../utils/formatCurrency';
 import { generateUniqueId } from '../utils/generateCode';
@@ -196,6 +197,10 @@ export default function BookingPage() {
     }
     if (!selectedSlot) {
       setStepError('Vui lòng chọn khung giờ khám');
+      return;
+    }
+    if (isSlotPast(selectedDate, selectedSlot)) {
+      setStepError('Khung giờ khám này đã qua. Vui lòng chọn một khung giờ khác còn trống hoặc chọn ngày tiếp theo.');
       return;
     }
     if (!selectedProfileId) {
@@ -386,9 +391,19 @@ export default function BookingPage() {
                 </div>
                 <SlotPicker
                   selectedDate={selectedDate}
-                  onSelectDate={(d) => setSelectedDate(d)}
+                  onSelectDate={(d) => {
+                    setSelectedDate(d);
+                    if (selectedSlot && isSlotPast(d, selectedSlot)) {
+                      setSelectedSlot('');
+                    }
+                  }}
                   selectedSlot={selectedSlot}
-                  onSelectSlot={(s) => setSelectedSlot(s)}
+                  onSelectSlot={(s) => {
+                    if (!isSlotPast(selectedDate, s)) {
+                      setSelectedSlot(s);
+                      setStepError('');
+                    }
+                  }}
                   bookedSlots={bookedSlots}
                 />
               </div>

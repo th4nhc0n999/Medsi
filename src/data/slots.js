@@ -68,3 +68,23 @@ export function getUpcomingDates(daysCount = 7) {
 
   return dates;
 }
+
+/**
+ * Check if a given slot on a given date has already passed compared to current local time
+ * @param {string} dateStr Format 'YYYY-MM-DD'
+ * @param {string} timeStr Format 'HH:mm' (start time of slot)
+ * @returns {boolean}
+ */
+export function isSlotPast(dateStr, timeStr) {
+  if (!dateStr || !timeStr) return false;
+  try {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    const slotDate = new Date(year, month - 1, day, hours, minutes, 0, 0);
+    const now = new Date();
+    return slotDate <= now;
+  } catch (err) {
+    return false;
+  }
+}
+

@@ -15,6 +15,7 @@ import {
 import { STORAGE_KEYS, getStorage, setStorage, removeStorage } from '../utils/storage';
 import { formatCurrency } from '../utils/formatCurrency';
 import { generateBookingCode, generateUniqueId } from '../utils/generateCode';
+import { isSlotPast } from '../data/slots';
 
 export default function PaymentPage() {
   const navigate = useNavigate();
@@ -75,6 +76,15 @@ export default function PaymentPage() {
 
     // Simulate 800ms payment gateway verification
     setTimeout(() => {
+      // Re-verify that the slot has not passed
+      if (isSlotPast(draft.date, draft.startTime)) {
+        setIsProcessing(false);
+        setConflictError(
+          `Khung giờ khám ${draft.startTime} ngày ${draft.date} đã trôi qua. Vui lòng quay lại để chọn khung giờ khác!`
+        );
+        return;
+      }
+
       // Re-verify that the slot is not taken before creating booking
       const existingBookings = getStorage(STORAGE_KEYS.BOOKINGS, []);
       const isSlotConflict = existingBookings.some(

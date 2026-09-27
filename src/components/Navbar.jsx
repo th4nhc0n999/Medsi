@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import {
   Activity,
   User,
@@ -19,10 +19,15 @@ import { STORAGE_KEYS, getStorage, removeStorage } from '../utils/storage';
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const currentUser = getStorage(STORAGE_KEYS.CURRENT_USER, null);
   const isAdmin = currentUser?.role === 'admin';
+
+  const currentTab = searchParams.get('tab');
+  const isExploreDoctors = location.pathname === '/explore' && currentTab !== 'hospitals';
+  const isExploreHospitals = location.pathname === '/explore' && currentTab === 'hospitals';
 
   const handleLogout = () => {
     removeStorage(STORAGE_KEYS.CURRENT_USER);
@@ -95,9 +100,9 @@ export default function Navbar() {
               // Patient / Public Navigation
               <>
                 <Link
-                  to="/explore"
+                  to="/explore?tab=doctors"
                   className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                    isActive('/explore')
+                    isExploreDoctors
                       ? 'bg-sky-50 text-sky-700'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
@@ -107,7 +112,11 @@ export default function Navbar() {
                 </Link>
                 <Link
                   to="/explore?tab=hospitals"
-                  className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all"
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                    isExploreHospitals
+                      ? 'bg-sky-50 text-sky-700'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
                 >
                   <Building2 className="w-4 h-4 text-cyan-600" />
                   Khám bệnh viện
@@ -228,9 +237,13 @@ export default function Navbar() {
           ) : (
             <>
               <Link
-                to="/explore"
+                to="/explore?tab=doctors"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-sky-50 hover:text-sky-700"
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  isExploreDoctors
+                    ? 'bg-sky-50 text-sky-700 font-bold'
+                    : 'text-slate-700 hover:bg-sky-50 hover:text-sky-700'
+                }`}
               >
                 <Stethoscope className="w-5 h-5 text-sky-600" />
                 Khám bác sĩ
@@ -238,7 +251,11 @@ export default function Navbar() {
               <Link
                 to="/explore?tab=hospitals"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-sky-50 hover:text-sky-700"
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  isExploreHospitals
+                    ? 'bg-sky-50 text-sky-700 font-bold'
+                    : 'text-slate-700 hover:bg-sky-50 hover:text-sky-700'
+                }`}
               >
                 <Building2 className="w-5 h-5 text-cyan-600" />
                 Khám bệnh viện

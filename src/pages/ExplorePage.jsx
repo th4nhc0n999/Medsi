@@ -10,27 +10,19 @@ import { Stethoscope, Building2, Search, Sparkles, CheckCircle2 } from 'lucide-r
 
 export default function ExplorePage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialTab = searchParams.get('tab') === 'hospitals' ? 'hospitals' : 'doctors';
+  const activeTab = searchParams.get('tab') === 'hospitals' ? 'hospitals' : 'doctors';
 
-  const [activeTab, setActiveTab] = useState(initialTab);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('all');
   const [selectedCity, setSelectedCity] = useState('all');
 
-  // Sync tab with query params if changed externally
-  useEffect(() => {
-    const tab = searchParams.get('tab');
-    if (tab === 'hospitals') {
-      setActiveTab('hospitals');
-    } else if (tab === 'doctors') {
-      setActiveTab('doctors');
-    }
-  }, [searchParams]);
-
   // Tab switch handler
   const handleTabChange = (newTab) => {
-    setActiveTab(newTab);
-    setSearchParams(newTab === 'hospitals' ? { tab: 'hospitals' } : {});
+    if (newTab === 'hospitals') {
+      setSearchParams({ tab: 'hospitals' });
+    } else {
+      setSearchParams({ tab: 'doctors' });
+    }
   };
 
   // Filter Doctors

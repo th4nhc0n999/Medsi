@@ -27,6 +27,7 @@ import { isSlotPast } from '../data/slots';
 import { STORAGE_KEYS, getStorage, setStorage } from '../utils/storage';
 import { formatCurrency } from '../utils/formatCurrency';
 import { generateUniqueId } from '../utils/generateCode';
+import { validatePatientDob, validatePhoneNumber, validateFullName } from '../utils/validators';
 
 export default function BookingPage() {
   const { type, id } = useParams();
@@ -149,16 +150,21 @@ export default function BookingPage() {
     e.preventDefault();
     setNewProfileError('');
 
-    if (!newFullName.trim()) {
-      setNewProfileError('Vui lòng nhập họ và tên bệnh nhân');
+    const nameCheck = validateFullName(newFullName);
+    if (!nameCheck.isValid) {
+      setNewProfileError(nameCheck.error);
       return;
     }
-    if (!newDob) {
-      setNewProfileError('Vui lòng chọn ngày sinh');
+
+    const dobCheck = validatePatientDob(newDob);
+    if (!dobCheck.isValid) {
+      setNewProfileError(dobCheck.error);
       return;
     }
-    if (!newPhone.trim()) {
-      setNewProfileError('Vui lòng nhập số điện thoại');
+
+    const phoneCheck = validatePhoneNumber(newPhone);
+    if (!phoneCheck.isValid) {
+      setNewProfileError(phoneCheck.error);
       return;
     }
 
@@ -170,7 +176,7 @@ export default function BookingPage() {
       fullName: newFullName.trim(),
       dob: newDob,
       gender: newGender,
-      phone: newPhone.trim(),
+      phone: phoneCheck.normalized,
       relationship: newRelationship,
       createdAt: new Date().toISOString(),
     };
@@ -687,6 +693,8 @@ export default function BookingPage() {
               <input
                 type="date"
                 value={newDob}
+                max={new Date().toISOString().slice(0, 10)}
+                min="1900-01-01"
                 onChange={(e) => setNewDob(e.target.value)}
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-hidden focus:border-sky-500 focus:bg-white text-slate-800"
               />
@@ -710,7 +718,7 @@ export default function BookingPage() {
           {/* Phone */}
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-              Số điện thoại liên hệ <span className="text-rose-500">*</span>
+              Số điện thoại liên hệ <span className="text-rose-500">*</span> <span className="text-[11px] font-normal text-slate-400 lowercase">(9 - 11 chữ số)</span>
             </label>
             <input
               type="tel"

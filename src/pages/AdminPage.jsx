@@ -28,6 +28,7 @@ import StatusBadge from '../components/StatusBadge';
 import Modal from '../components/Modal';
 import { STORAGE_KEYS, getStorage, setStorage, resetToInitialStorage } from '../utils/storage';
 import { formatCurrency } from '../utils/formatCurrency';
+import { buildCSVContent, downloadCSV } from '../utils/csvExport';
 
 export default function AdminPage() {
   const navigate = useNavigate();
@@ -233,42 +234,29 @@ export default function AdminPage() {
     ];
 
     const rows = listToExport.map((b) => [
-      `"${b.code || ''}"`,
-      `"${b.patientName || ''}"`,
-      `"${b.patientPhone || ''}"`,
-      `"${(b.providerName || '').replace(/"/g, '""')}"`,
-      `"${(b.specialtyName || '').replace(/"/g, '""')}"`,
-      `"${b.date || ''}"`,
-      `"${b.startTime || ''} - ${b.endTime || ''}"`,
-      `"${b.totalAmount || 0}"`,
-      `"${b.paymentStatus === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán'}"`,
-      `"${
-        b.status === 'approved'
-          ? 'Đã duyệt'
-          : b.status === 'completed'
-          ? 'Hoàn thành'
-          : b.status === 'cancelled'
-          ? 'Đã hủy'
-          : 'Chờ duyệt'
-      }"`,
-      `"${(b.cancelReason || '').replace(/"/g, '""')}"`,
-      `"${b.createdAt || ''}"`,
+      b.code || '',
+      b.patientName || '',
+      b.patientPhone || '',
+      b.providerName || '',
+      b.specialtyName || '',
+      b.date || '',
+      `${b.startTime || ''} - ${b.endTime || ''}`,
+      b.totalAmount || 0,
+      b.paymentStatus === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán',
+      b.status === 'approved'
+        ? 'Đã duyệt'
+        : b.status === 'completed'
+        ? 'Hoàn thành'
+        : b.status === 'cancelled'
+        ? 'Đã hủy'
+        : 'Chờ duyệt',
+      b.cancelReason || '',
+      b.createdAt || '',
     ]);
 
-    const csvContent =
-      '\uFEFF' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\r\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute(
-      'download',
-      `medsi_danh_sach_lich_kham_${new Date().toISOString().slice(0, 10)}.csv`
-    );
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    const csvContent = buildCSVContent(headers, rows);
+    const fileName = `medsi_danh_sach_lich_kham_${new Date().toISOString().slice(0, 10)}.csv`;
+    downloadCSV(csvContent, fileName);
     showToast(`Đã xuất file CSV với ${listToExport.length} lịch khám`);
   };
 

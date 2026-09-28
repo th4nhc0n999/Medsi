@@ -24,6 +24,7 @@ export default function Navbar() {
 
   const currentUser = getStorage(STORAGE_KEYS.CURRENT_USER, null);
   const isAdmin = currentUser?.role === 'admin';
+  const isDoctor = currentUser?.role === 'doctor';
 
   const currentTab = searchParams.get('tab');
   const isExploreDoctors = location.pathname === '/explore' && currentTab !== 'hospitals';
@@ -45,7 +46,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Brand Logo */}
           <Link
-            to={currentUser ? (isAdmin ? '/admin' : '/explore') : '/auth'}
+            to={currentUser ? (isAdmin ? '/admin' : isDoctor ? '/doctor' : '/explore') : '/auth'}
             className="flex items-center gap-2.5 group focus:outline-hidden"
           >
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-cyan-500 flex items-center justify-center text-white shadow-md shadow-sky-500/20 group-hover:scale-105 transition-transform">
@@ -59,6 +60,11 @@ export default function Navbar() {
                 {isAdmin && (
                   <span className="px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide bg-sky-100 text-sky-800 rounded">
                     Admin
+                  </span>
+                )}
+                {isDoctor && (
+                  <span className="px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide bg-emerald-100 text-emerald-800 rounded">
+                    Bác sĩ
                   </span>
                 )}
               </div>
@@ -94,6 +100,32 @@ export default function Navbar() {
                 >
                   <Stethoscope className="w-4 h-4 text-slate-400" />
                   Xem giao diện Patient
+                </Link>
+              </>
+            ) : isDoctor ? (
+              // Doctor Navigation
+              <>
+                <Link
+                  to="/doctor"
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                    isActive('/doctor')
+                      ? 'bg-emerald-50 text-emerald-800 font-bold'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  <Calendar className="w-4 h-4 text-emerald-600" />
+                  Quản lý Lịch & Ca khám
+                </Link>
+                <Link
+                  to="/explore"
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                    isActive('/explore')
+                      ? 'bg-sky-50 text-sky-700'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  <Stethoscope className="w-4 h-4 text-slate-400" />
+                  Xem giao diện Đặt khám
                 </Link>
               </>
             ) : (
@@ -150,9 +182,9 @@ export default function Navbar() {
             {currentUser ? (
               <div className="flex items-center gap-3 pl-3 border-l border-slate-200">
                 <Link
-                  to="/account"
+                  to={isDoctor ? '/doctor' : '/account'}
                   className={`flex items-center gap-2.5 px-3 py-1.5 rounded-xl border transition-all ${
-                    isActive('/account')
+                    isActive(isDoctor ? '/doctor' : '/account')
                       ? 'border-sky-300 bg-sky-50/70 text-sky-900 shadow-xs'
                       : 'border-slate-200 hover:border-slate-300 bg-white text-slate-800'
                   }`}
@@ -165,7 +197,7 @@ export default function Navbar() {
                       {currentUser.fullName || 'Tài khoản'}
                     </p>
                     <span className="text-[10px] text-slate-500 font-medium">
-                      {isAdmin ? 'Quản trị viên' : 'Bệnh nhân'}
+                      {isAdmin ? 'Quản trị viên' : isDoctor ? 'Bác sĩ' : 'Bệnh nhân'}
                     </span>
                   </div>
                 </Link>
@@ -232,6 +264,25 @@ export default function Navbar() {
               >
                 <Stethoscope className="w-5 h-5 text-slate-400" />
                 Xem giao diện Bệnh nhân
+              </Link>
+            </>
+          ) : isDoctor ? (
+            <>
+              <Link
+                to="/doctor"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-emerald-800 bg-emerald-50"
+              >
+                <Calendar className="w-5 h-5 text-emerald-600" />
+                Quản lý Lịch & Ca khám
+              </Link>
+              <Link
+                to="/explore"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-sky-50 hover:text-sky-700"
+              >
+                <Stethoscope className="w-5 h-5 text-slate-400" />
+                Xem giao diện Đặt khám
               </Link>
             </>
           ) : (

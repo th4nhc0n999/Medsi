@@ -24,7 +24,7 @@ import Modal from '../components/Modal';
 import { DOCTORS } from '../data/doctors';
 import { HOSPITALS } from '../data/hospitals';
 import { isSlotPast } from '../data/slots';
-import { STORAGE_KEYS, getStorage, setStorage } from '../utils/storage';
+import { STORAGE_KEYS, getStorage, setStorage, getDoctorSchedule } from '../utils/storage';
 import { formatCurrency } from '../utils/formatCurrency';
 import { generateUniqueId } from '../utils/generateCode';
 import { validatePatientDob, validatePhoneNumber, validateFullName } from '../utils/validators';
@@ -121,6 +121,9 @@ export default function BookingPage() {
         ((isDoctor && b.doctorId === id) || (!isDoctor && b.hospitalId === id))
     )
     .map((b) => b.startTime);
+
+  // Available slots for doctor from doctorSchedules
+  const doctorAvailableSlots = isDoctor ? getDoctorSchedule(id, selectedDate) : [];
 
   // Pricing calculations
   const examFee = isDoctor
@@ -399,7 +402,12 @@ export default function BookingPage() {
                   selectedDate={selectedDate}
                   onSelectDate={(d) => {
                     setSelectedDate(d);
-                    if (selectedSlot && isSlotPast(d, selectedSlot)) {
+                    if (isDoctor) {
+                      const slotsForDate = getDoctorSchedule(id, d);
+                      if (!slotsForDate.includes(selectedSlot) || isSlotPast(d, selectedSlot)) {
+                        setSelectedSlot('');
+                      }
+                    } else if (selectedSlot && isSlotPast(d, selectedSlot)) {
                       setSelectedSlot('');
                     }
                   }}
@@ -411,6 +419,9 @@ export default function BookingPage() {
                     }
                   }}
                   bookedSlots={bookedSlots}
+                  isDoctorBooking={isDoctor}
+                  doctorAvailableSlots={doctorAvailableSlots}
+                  doctorName={doctor?.name || ''}
                 />
               </div>
             </div>

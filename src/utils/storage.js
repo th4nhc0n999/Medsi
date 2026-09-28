@@ -7,6 +7,7 @@ export const STORAGE_KEYS = {
   BOOKINGS: 'medsi_bookings',
   PAYMENTS: 'medsi_payments',
   BOOKING_DRAFT: 'medsi_bookingDraft',
+  DOCTOR_SCHEDULES: 'medsi_doctorSchedules',
 };
 
 // Initial Seed Data Sets
@@ -28,6 +29,26 @@ export const DEFAULT_USERS = [
     password: '123456',
     role: 'patient',
     createdAt: '2026-09-26T09:00:00.000Z',
+  },
+  {
+    id: 'usr_doctor_huy',
+    fullName: 'BS. CKII Trần Quốc Huy',
+    email: 'doctor@medsi.vn',
+    phone: '0911223344',
+    password: '123456',
+    role: 'doctor',
+    doctorId: 'doc_1',
+    createdAt: '2026-09-26T08:00:00.000Z',
+  },
+  {
+    id: 'usr_doctor_bay',
+    fullName: 'TS. BS Nguyễn Thị Bảy',
+    email: 'bs.bay@medsi.vn',
+    phone: '0922334455',
+    password: '123456',
+    role: 'doctor',
+    doctorId: 'doc_2',
+    createdAt: '2026-09-26T08:30:00.000Z',
   },
 ];
 
@@ -197,6 +218,7 @@ export const DEFAULT_PAYMENTS = [
  */
 export function getStorage(key, fallback = null) {
   try {
+    if (typeof localStorage === 'undefined') return fallback;
     let item = localStorage.getItem(key);
     // Backward-compatibility: if namespaced key not found, check legacy un-namespaced key
     if (item === null || item === undefined) {
@@ -216,6 +238,7 @@ export function getStorage(key, fallback = null) {
  */
 export function setStorage(key, value) {
   try {
+    if (typeof localStorage === 'undefined') return;
     localStorage.setItem(key, JSON.stringify(value));
   } catch (error) {
     console.error(`Error writing key "${key}" to localStorage:`, error);
@@ -227,6 +250,7 @@ export function setStorage(key, value) {
  */
 export function removeStorage(key) {
   try {
+    if (typeof localStorage === 'undefined') return;
     localStorage.removeItem(key);
     // Also remove legacy key if present
     const legacyKey = key.replace('medsi_', '');
@@ -237,12 +261,95 @@ export function removeStorage(key) {
 }
 
 /**
+ * Generate default schedules for demo doctors across today and upcoming 7 days
+ */
+export function generateDefaultDoctorSchedules() {
+  const schedules = {
+    doc_1: {
+      '2026-10-02': ['08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '14:00', '14:30', '15:00'],
+    },
+    doc_2: {
+      '2026-10-03': ['08:30', '09:00', '09:30', '10:00', '14:00', '14:30', '15:00'],
+    },
+    doc_3: {
+      '2026-10-04': ['09:00', '09:30', '10:00', '10:30', '14:00', '14:30'],
+    },
+    doc_4: {
+      '2026-10-05': ['08:30', '09:00', '09:30', '10:00', '15:00', '15:30'],
+    },
+  };
+
+  // Populate today and next 7 days for doctors
+  const now = new Date();
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(now);
+    d.setDate(now.getDate() + i);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const dateStr = `${y}-${m}-${day}`;
+
+    if (!schedules.doc_1) schedules.doc_1 = {};
+    if (!schedules.doc_1[dateStr]) {
+      schedules.doc_1[dateStr] = ['08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '14:00', '14:30', '15:00'];
+    }
+
+    if (!schedules.doc_2) schedules.doc_2 = {};
+    if (!schedules.doc_2[dateStr]) {
+      schedules.doc_2[dateStr] = ['08:30', '09:00', '09:30', '10:00', '13:30', '14:00', '14:30', '15:00'];
+    }
+
+    if (!schedules.doc_3) schedules.doc_3 = {};
+    if (!schedules.doc_3[dateStr]) {
+      schedules.doc_3[dateStr] = ['09:00', '09:30', '10:00', '10:30', '14:00', '14:30', '15:00'];
+    }
+  }
+
+  return schedules;
+}
+
+/**
+ * Retrieve registered schedule for a doctor on a specific date
+ * @param {string} doctorId
+ * @param {string} dateStr 'YYYY-MM-DD'
+ * @returns {string[]} Array of slot times, e.g. ['08:30', '09:00']
+ */
+export function getDoctorSchedule(doctorId, dateStr) {
+  if (!doctorId || !dateStr) return [];
+  const schedules = getStorage(STORAGE_KEYS.DOCTOR_SCHEDULES, {});
+  return (schedules && schedules[doctorId] && schedules[doctorId][dateStr]) || [];
+}
+
+/**
+ * Save available slots for a doctor on a specific date
+ * @param {string} doctorId
+ * @param {string} dateStr 'YYYY-MM-DD'
+ * @param {string[]} slots Array of slot times
+ */
+export function saveDoctorSchedule(doctorId, dateStr, slots) {
+  if (!doctorId || !dateStr) return;
+  const schedules = getStorage(STORAGE_KEYS.DOCTOR_SCHEDULES, {}) || {};
+  if (!schedules[doctorId]) {
+    schedules[doctorId] = {};
+  }
+  schedules[doctorId][dateStr] = Array.isArray(slots) ? slots : [];
+  setStorage(STORAGE_KEYS.DOCTOR_SCHEDULES, schedules);
+}
+
+/**
  * Seed initial data if not already present
  */
 export function initInitialStorage() {
   const existingUsers = getStorage(STORAGE_KEYS.USERS, null);
   if (!existingUsers || !Array.isArray(existingUsers) || existingUsers.length === 0) {
     setStorage(STORAGE_KEYS.USERS, DEFAULT_USERS);
+  } else {
+    // If existing users does not contain demo doctor, merge them in
+    const hasDoctor = existingUsers.some((u) => u.role === 'doctor');
+    if (!hasDoctor) {
+      const doctorUsers = DEFAULT_USERS.filter((u) => u.role === 'doctor');
+      setStorage(STORAGE_KEYS.USERS, [...existingUsers, ...doctorUsers]);
+    }
   }
 
   const existingProfiles = getStorage(STORAGE_KEYS.PATIENT_PROFILES, null);
@@ -259,6 +366,11 @@ export function initInitialStorage() {
   if (!existingPayments || !Array.isArray(existingPayments) || existingPayments.length === 0) {
     setStorage(STORAGE_KEYS.PAYMENTS, DEFAULT_PAYMENTS);
   }
+
+  const existingSchedules = getStorage(STORAGE_KEYS.DOCTOR_SCHEDULES, null);
+  if (!existingSchedules || typeof existingSchedules !== 'object') {
+    setStorage(STORAGE_KEYS.DOCTOR_SCHEDULES, generateDefaultDoctorSchedules());
+  }
 }
 
 /**
@@ -269,6 +381,7 @@ export function resetToInitialStorage() {
   setStorage(STORAGE_KEYS.PATIENT_PROFILES, DEFAULT_PROFILES);
   setStorage(STORAGE_KEYS.BOOKINGS, DEFAULT_BOOKINGS);
   setStorage(STORAGE_KEYS.PAYMENTS, DEFAULT_PAYMENTS);
+  setStorage(STORAGE_KEYS.DOCTOR_SCHEDULES, generateDefaultDoctorSchedules());
   removeStorage(STORAGE_KEYS.BOOKING_DRAFT);
   window.dispatchEvent(new Event('medsi_storage_reset'));
   return true;

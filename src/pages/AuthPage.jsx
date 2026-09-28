@@ -12,6 +12,7 @@ import {
   ArrowRight,
   AlertCircle,
   CheckCircle2,
+  Stethoscope,
 } from 'lucide-react';
 import { STORAGE_KEYS, getStorage, setStorage } from '../utils/storage';
 import { generateUniqueId } from '../utils/generateCode';
@@ -47,6 +48,8 @@ export default function AuthPage() {
         navigate(from, { replace: true });
       } else if (currentUser.role === 'admin') {
         navigate('/admin', { replace: true });
+      } else if (currentUser.role === 'doctor') {
+        navigate('/doctor', { replace: true });
       } else {
         navigate('/explore', { replace: true });
       }
@@ -93,6 +96,8 @@ export default function AuthPage() {
       navigate(from, { replace: true });
     } else if (foundUser.role === 'admin') {
       navigate('/admin', { replace: true });
+    } else if (foundUser.role === 'doctor') {
+      navigate('/doctor', { replace: true });
     } else {
       navigate('/explore', { replace: true });
     }
@@ -286,7 +291,7 @@ export default function AuthPage() {
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block text-center">
                   Tài khoản dùng thử (1-Click điền)
                 </span>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <button
                     type="button"
                     onClick={() => handleQuickLogin('demo@medsi.vn', '123456')}
@@ -297,6 +302,18 @@ export default function AuthPage() {
                       <span>Bệnh nhân</span>
                     </div>
                     <p className="text-[10px] text-slate-500 truncate mt-0.5">demo@medsi.vn</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleQuickLogin('doctor@medsi.vn', '123456')}
+                    className="p-2 text-left rounded-xl border border-emerald-100 bg-emerald-50/60 hover:bg-emerald-100 text-emerald-900 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-1.5 text-xs font-bold">
+                      <Stethoscope className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Bác sĩ</span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 truncate mt-0.5">doctor@medsi.vn</p>
                   </button>
 
                   <button

@@ -26,15 +26,22 @@ import {
   User,
   FileText,
   AlertTriangle,
+  Wallet,
+  QrCode,
+  CreditCard,
+  ShieldCheck,
 } from 'lucide-react';
 import { TIME_SLOTS, getUpcomingDates, isSlotPast } from '../data/slots';
 import { DOCTORS } from '../data/doctors';
+import { VIETQR_BANKS } from '../data/banks';
 import {
   STORAGE_KEYS,
   getStorage,
   setStorage,
   getDoctorSchedule,
   saveDoctorSchedule,
+  getDoctorPaymentAccount,
+  saveDoctorPaymentAccount,
 } from '../utils/storage';
 import { formatCurrency } from '../utils/formatCurrency';
 import StatusBadge from '../components/StatusBadge';
@@ -56,10 +63,18 @@ export default function DoctorDashboardPage() {
   const upcomingDates = getUpcomingDates(14);
 
   // 2. Active Tab & Selection State
-  const [activeTab, setActiveTab] = useState('schedule'); // 'schedule' | 'patients'
+  const [activeTab, setActiveTab] = useState('schedule'); // 'schedule' | 'patients' | 'payment'
   const [selectedDate, setSelectedDate] = useState(() => upcomingDates[0]?.dateStr || '');
   const [registeredSlots, setRegisteredSlots] = useState([]);
   const [allBookings, setAllBookings] = useState([]);
+
+  // Payment Configuration State
+  const [paymentBankId, setPaymentBankId] = useState('MB');
+  const [paymentAccountNumber, setPaymentAccountNumber] = useState('');
+  const [paymentAccountName, setPaymentAccountName] = useState('');
+  const [paymentMomoPhone, setPaymentMomoPhone] = useState('');
+  const [paymentMomoName, setPaymentMomoName] = useState('');
+  const [previewTab, setPreviewTab] = useState('vietqr'); // 'vietqr' | 'momo'
 
   // Filter for Appointments tab
   const [patientDateFilter, setPatientDateFilter] = useState('all');
@@ -97,6 +112,62 @@ export default function DoctorDashboardPage() {
       setHasUnsavedChanges(false);
     }
   }, [selectedDate, doctorId]);
+
+  // Load payment configuration for this doctor
+  useEffect(() => {
+    if (doctorId) {
+      const savedConfig = getDoctorPaymentAccount(doctorId);
+      const defaultDoctor = DOCTORS.find((d) => d.id === doctorId)?.paymentAccount;
+
+      const bank = savedConfig?.bankAccount || defaultDoctor?.bankAccount || {
+        bankId: 'MB',
+        bankName: 'Ngân hàng Quân Đội (MBBank)',
+        accountNumber: '0345678999',
+        accountName: doctorInfo?.name ? doctorInfo.name.toUpperCase() : 'BAC SI MEDSI',
+      };
+
+      const momo = savedConfig?.momoAccount || defaultDoctor?.momoAccount || {
+        phoneNumber: doctorInfo?.phone || currentUser?.phone || '0987654321',
+        accountName: doctorInfo?.name ? doctorInfo.name.toUpperCase() : 'BAC SI MEDSI',
+      };
+
+      setPaymentBankId(bank.bankId || 'MB');
+      setPaymentAccountNumber(bank.accountNumber || '');
+      setPaymentAccountName(bank.accountName || '');
+      setPaymentMomoPhone(momo.phoneNumber || '');
+      setPaymentMomoName(momo.accountName || '');
+    }
+  }, [doctorId, doctorInfo, currentUser]);
+
+  const handleSavePaymentAccount = (e) => {
+    e?.preventDefault();
+    if (!paymentAccountNumber.trim() || !paymentAccountName.trim() || !paymentMomoPhone.trim()) {
+      showToast('Vui lòng điền đầy đủ số tài khoản ngân hàng, tên chủ thẻ và số điện thoại MoMo!', 'error');
+      return;
+    }
+
+    const bankObj = VIETQR_BANKS.find((b) => b.id === paymentBankId) || {
+      id: paymentBankId,
+      name: paymentBankId,
+    };
+
+    const accountData = {
+      doctorId,
+      bankAccount: {
+        bankId: paymentBankId,
+        bankName: bankObj.name,
+        accountNumber: paymentAccountNumber.trim(),
+        accountName: paymentAccountName.trim().toUpperCase(),
+      },
+      momoAccount: {
+        phoneNumber: paymentMomoPhone.trim(),
+        accountName: (paymentMomoName.trim() || paymentAccountName.trim()).toUpperCase(),
+      },
+    };
+
+    saveDoctorPaymentAccount(doctorId, accountData);
+    showToast('Đã lưu cấu hình tài khoản VietQR & Ví MoMo thành công!');
+  };
 
   const loadBookings = () => {
     const bookings = getStorage(STORAGE_KEYS.BOOKINGS, []);
@@ -341,6 +412,18 @@ export default function DoctorDashboardPage() {
               >
                 {doctorBookings.length}
               </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('payment')}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
+                activeTab === 'payment'
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25'
+                  : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200'
+              }`}
+            >
+              <Wallet className="w-4 h-4" />
+              <span>Tài khoản thanh toán</span>
             </button>
           </div>
         </div>
@@ -787,6 +870,281 @@ export default function DoctorDashboardPage() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* ================= TAB 3: PAYMENT ACCOUNTS CONFIGURATION ================= */}
+        {activeTab === 'payment' && (
+          <div className="space-y-6">
+            {/* Guide Info Banner */}
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-50 via-sky-50 to-teal-50 border border-emerald-100 flex items-start gap-3 shadow-xs">
+              <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+              <div className="text-xs text-slate-700 leading-relaxed">
+                <span className="font-bold text-sm text-slate-900 block mb-0.5">
+                  Cấu hình nhận thanh toán trực tiếp (VietQR & Ví MoMo bên thứ 3)
+                </span>
+                Khi bệnh nhân đặt lịch hẹn khám với Bác sĩ, hệ thống sẽ sử dụng trực tiếp tài khoản Ngân hàng (chuẩn VietQR) và Ví điện tử MoMo dưới đây để bệnh nhân quét mã chuyển tiền. Vui lòng kiểm tra kỹ số tài khoản và số điện thoại trước khi lưu.
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              {/* Form Input (7 cols) */}
+              <div className="lg:col-span-7 space-y-6">
+                <form onSubmit={handleSavePaymentAccount} className="space-y-6">
+                  {/* Section 1: VietQR Bank Account */}
+                  <div className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-4">
+                    <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+                      <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center">
+                        <CreditCard className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-black text-slate-900">
+                          1. Tài khoản Ngân hàng nhận tiền (VietQR 24/7)
+                        </h4>
+                        <p className="text-xs text-slate-500">
+                          Tự động sinh mã VietQR chuyển tiền vào tài khoản ngân hàng
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3.5 text-xs">
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">
+                          Ngân hàng thụ hưởng <span className="text-rose-500">*</span>
+                        </label>
+                        <select
+                          value={paymentBankId}
+                          onChange={(e) => setPaymentBankId(e.target.value)}
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-hidden focus:border-emerald-500 focus:bg-white transition-colors"
+                        >
+                          {VIETQR_BANKS.map((b) => (
+                            <option key={b.id} value={b.id}>
+                              {b.name} ({b.id})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">
+                          Số tài khoản ngân hàng <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={paymentAccountNumber}
+                          onChange={(e) => setPaymentAccountNumber(e.target.value)}
+                          placeholder="Ví dụ: 0345678999"
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-900 focus:outline-hidden focus:border-emerald-500 focus:bg-white transition-colors"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">
+                          Tên chủ tài khoản (In hoa không dấu) <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={paymentAccountName}
+                          onChange={(e) => setPaymentAccountName(e.target.value.toUpperCase())}
+                          placeholder="Ví dụ: NGUYEN THI BAY"
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-hidden focus:border-emerald-500 focus:bg-white transition-colors uppercase"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section 2: MoMo Wallet Account */}
+                  <div className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-4">
+                    <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+                      <div className="w-9 h-9 rounded-xl bg-pink-50 text-[#d82d8b] flex items-center justify-center">
+                        <Wallet className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-black text-slate-900">
+                          2. Tài khoản Ví Điện Tử MoMo nhận tiền
+                        </h4>
+                        <p className="text-xs text-slate-500">
+                          Hỗ trợ bệnh nhân quét mã và chuyển tiền nhanh qua ứng dụng MoMo
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3.5 text-xs">
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">
+                          Số điện thoại đăng ký MoMo <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="tel"
+                          value={paymentMomoPhone}
+                          onChange={(e) => setPaymentMomoPhone(e.target.value)}
+                          placeholder="Ví dụ: 0987654321"
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-900 focus:outline-hidden focus:border-pink-500 focus:bg-white transition-colors"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">
+                          Tên hiển thị chủ Ví MoMo (In hoa)
+                        </label>
+                        <input
+                          type="text"
+                          value={paymentMomoName}
+                          onChange={(e) => setPaymentMomoName(e.target.value.toUpperCase())}
+                          placeholder="Ví dụ: NGUYEN THI BAY"
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-hidden focus:border-pink-500 focus:bg-white transition-colors uppercase"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Save Action */}
+                  <div className="flex items-center justify-end gap-3 pt-2">
+                    <button
+                      type="submit"
+                      className="px-6 py-3 rounded-xl bg-emerald-600 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-sm shadow-md shadow-emerald-600/25 flex items-center gap-2 transition-all cursor-pointer"
+                    >
+                      <Save className="w-4 h-4" />
+                      <span>Lưu cấu hình thanh toán</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Live Preview (5 cols) */}
+              <div className="lg:col-span-5 space-y-4">
+                <div className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <h4 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                      <QrCode className="w-4 h-4 text-emerald-600" />
+                      <span>Xem trước mã thanh toán thực tế</span>
+                    </h4>
+                  </div>
+
+                  {/* Toggle Preview View */}
+                  <div className="flex p-1 bg-slate-100 rounded-xl">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewTab('vietqr')}
+                      className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                        previewTab === 'vietqr'
+                          ? 'bg-white text-slate-900 shadow-xs'
+                          : 'text-slate-500 hover:text-slate-900'
+                      }`}
+                    >
+                      Mã VietQR Ngân Hàng
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewTab('momo')}
+                      className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                        previewTab === 'momo'
+                          ? 'bg-white text-[#d82d8b] shadow-xs'
+                          : 'text-slate-500 hover:text-slate-900'
+                      }`}
+                    >
+                      Mã Cổng Ví MoMo
+                    </button>
+                  </div>
+
+                  {/* VietQR Preview */}
+                  {previewTab === 'vietqr' && (
+                    <div className="space-y-4 text-center animate-fade-in">
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                        <span className="text-[11px] font-bold text-sky-700 bg-sky-50 px-2.5 py-0.5 rounded-full border border-sky-100 inline-block mb-3">
+                          VietQR Chuẩn Napas 24/7
+                        </span>
+
+                        <div className="inline-block p-2 bg-white rounded-2xl shadow-sm border border-slate-200 max-w-[220px]">
+                          <img
+                            src={`https://img.vietqr.io/image/${paymentBankId}-${paymentAccountNumber || '0345678999'}-compact2.png?accountName=${encodeURIComponent(
+                              paymentAccountName || doctorInfo.name
+                            )}`}
+                            alt="VietQR Bác sĩ"
+                            className="w-48 h-auto mx-auto rounded-lg"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=VIETQR_${paymentBankId}_${paymentAccountNumber}`;
+                            }}
+                          />
+                        </div>
+
+                        <div className="mt-3 text-xs space-y-1 text-slate-600">
+                          <p>
+                            Ngân hàng:{' '}
+                            <strong className="text-slate-900">
+                              {VIETQR_BANKS.find((b) => b.id === paymentBankId)?.name || paymentBankId}
+                            </strong>
+                          </p>
+                          <p>
+                            STK:{' '}
+                            <strong className="font-mono text-slate-900">
+                              {paymentAccountNumber || 'Chưa nhập'}
+                            </strong>
+                          </p>
+                          <p>
+                            Chủ TK:{' '}
+                            <strong className="text-slate-900 uppercase">
+                              {paymentAccountName || doctorInfo.name}
+                            </strong>
+                          </p>
+                        </div>
+                      </div>
+
+                      <p className="text-[11px] text-slate-400">
+                        Bác sĩ có thể dùng ứng dụng ngân hàng bất kỳ trên điện thoại để quét thử kiểm tra thông tin.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* MoMo QR Preview */}
+                  {previewTab === 'momo' && (
+                    <div className="space-y-4 text-center animate-fade-in">
+                      <div className="p-4 bg-pink-50/50 rounded-2xl border border-pink-100">
+                        <span className="text-[11px] font-bold text-[#d82d8b] bg-pink-100/70 px-2.5 py-0.5 rounded-full border border-pink-200 inline-block mb-3">
+                          Ví Điện Tử MoMo (Quét App MoMo Thật)
+                        </span>
+
+                        <div className="inline-block p-2 bg-white rounded-2xl shadow-sm border border-pink-200 max-w-[220px]">
+                          <img
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+                              `2|99|${paymentMomoPhone || '0987654321'}|${paymentMomoName || paymentAccountName || 'BAC SI MEDSI'}||0|0|0|MEDSI_BACSI_TEST`
+                            )}`}
+                            alt="MoMo QR Bác sĩ"
+                            className="w-48 h-48 mx-auto rounded-lg"
+                          />
+                        </div>
+
+                        <div className="mt-3 text-xs space-y-1 text-slate-600">
+                          <p>
+                            Ví điện tử: <strong className="text-[#d82d8b]">MoMo</strong>
+                          </p>
+                          <p>
+                            Số điện thoại:{' '}
+                            <strong className="font-mono text-slate-900">
+                              {paymentMomoPhone || 'Chưa nhập'}
+                            </strong>
+                          </p>
+                          <p>
+                            Chủ ví:{' '}
+                            <strong className="text-slate-900 uppercase">
+                              {paymentMomoName || paymentAccountName || doctorInfo.name}
+                            </strong>
+                          </p>
+                        </div>
+                      </div>
+
+                      <p className="text-[11px] text-slate-400">
+                        Bác sĩ mở ứng dụng MoMo trên điện thoại và dùng tính năng quét mã QR để quét thử kiểm tra.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

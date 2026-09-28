@@ -1,5 +1,4 @@
 export const DOCTORS = [
-
   {
     id: 'doc_8',
     name: 'BS. CKII Lê Văn Mười',
@@ -14,6 +13,18 @@ export const DOCTORS = [
     examFee: 700000,
     workplace: 'Bệnh viện Mắt Quốc tế MedSi Tây Đô',
     address: '150 đường 30 Tháng 4, Ninh Kiều, Cần Thơ',
+    paymentAccount: {
+      bankAccount: {
+        bankId: 'VPB',
+        bankName: 'Ngân hàng Việt Nam Thịnh Vượng (VPBank)',
+        accountNumber: '8889991234',
+        accountName: 'LE VAN MUOI',
+      },
+      momoAccount: {
+        phoneNumber: '0988990011',
+        accountName: 'LE VAN MUOI',
+      },
+    },
   },
   {
     id: 'doc_2',
@@ -29,6 +40,18 @@ export const DOCTORS = [
     examFee: 1000000,
     workplace: 'Viện Da liễu & Thẩm mỹ Công nghệ cao',
     address: '45 Nguyễn Đình Chiểu, Quận 3, TP.HCM',
+    paymentAccount: {
+      bankAccount: {
+        bankId: 'MB',
+        bankName: 'Ngân hàng Quân Đội (MBBank)',
+        accountNumber: '0345678999',
+        accountName: 'NGUYEN THI BAY',
+      },
+      momoAccount: {
+        phoneNumber: '0987654321',
+        accountName: 'NGUYEN THI BAY',
+      },
+    },
   },
   {
     id: 'doc_3',
@@ -44,6 +67,18 @@ export const DOCTORS = [
     examFee: 280000,
     workplace: 'Bệnh viện Đa khoa Quốc tế MedSi Thăng Long',
     address: '18 Hoàng Quốc Việt, Cầu Giấy, Hà Nội',
+    paymentAccount: {
+      bankAccount: {
+        bankId: 'TCB',
+        bankName: 'Ngân hàng Kỹ Thương (Techcombank)',
+        accountNumber: '19036789999011',
+        accountName: 'HOANG MINH TUAN',
+      },
+      momoAccount: {
+        phoneNumber: '0933445566',
+        accountName: 'HOANG MINH TUAN',
+      },
+    },
   },
   {
     id: 'doc_4',
@@ -59,6 +94,18 @@ export const DOCTORS = [
     examFee: 300000,
     workplace: 'Phòng khám Nhi MedSi Kids Care',
     address: '88 Nguyễn Thái Học, Quận 1, TP.HCM',
+    paymentAccount: {
+      bankAccount: {
+        bankId: 'ACB',
+        bankName: 'Ngân hàng Á Châu (ACB)',
+        accountNumber: '2468101288',
+        accountName: 'LE HOANG MAI',
+      },
+      momoAccount: {
+        phoneNumber: '0944556677',
+        accountName: 'LE HOANG MAI',
+      },
+    },
   },
   {
     id: 'doc_5',
@@ -74,6 +121,18 @@ export const DOCTORS = [
     examFee: 450000,
     workplace: 'Trung tâm Cơ Xương Khớp Kỹ thuật cao',
     address: '77 Giải Phóng, Đống Đa, Hà Nội',
+    paymentAccount: {
+      bankAccount: {
+        bankId: 'BIDV',
+        bankName: 'Ngân hàng Đầu tư & Phát triển (BIDV)',
+        accountNumber: '21510001234567',
+        accountName: 'VU DINH KHOA',
+      },
+      momoAccount: {
+        phoneNumber: '0955667788',
+        accountName: 'VU DINH KHOA',
+      },
+    },
   },
   {
     id: 'doc_6',
@@ -89,6 +148,18 @@ export const DOCTORS = [
     examFee: 250000,
     workplace: 'Bệnh viện Quốc tế MedSi Sông Hàn',
     address: '92 Nguyễn Văn Linh, Hải Châu, Đà Nẵng',
+    paymentAccount: {
+      bankAccount: {
+        bankId: 'TPB',
+        bankName: 'Ngân hàng Tiên Phong (TPBank)',
+        accountNumber: '03698521470',
+        accountName: 'DO NGOC BAO CHAU',
+      },
+      momoAccount: {
+        phoneNumber: '0966778899',
+        accountName: 'DO NGOC BAO CHAU',
+      },
+    },
   },
   {
     id: 'doc_7',
@@ -104,6 +175,18 @@ export const DOCTORS = [
     examFee: 320000,
     workplace: 'Trung tâm Nội soi Tiêu hóa MedSi',
     address: '240 Lý Thường Kiệt, Quận 10, TP.HCM',
+    paymentAccount: {
+      bankAccount: {
+        bankId: 'CTG',
+        bankName: 'Ngân hàng Công Thương (VietinBank)',
+        accountNumber: '108865432198',
+        accountName: 'PHAN ANH DUC',
+      },
+      momoAccount: {
+        phoneNumber: '0977889900',
+        accountName: 'PHAN ANH DUC',
+      },
+    },
   },
   {
     id: 'doc_1',
@@ -119,5 +202,17 @@ export const DOCTORS = [
     examFee: 350000,
     workplace: 'Phòng khám Đa khoa MedSi Diamond - Quận 1',
     address: '128 Trần Hưng Đạo, Quận 1, TP.HCM',
+    paymentAccount: {
+      bankAccount: {
+        bankId: 'VCB',
+        bankName: 'Ngân hàng Ngoại Thương (Vietcombank)',
+        accountNumber: '0071001234567',
+        accountName: 'TRAN QUOC HUY',
+      },
+      momoAccount: {
+        phoneNumber: '0911223344',
+        accountName: 'TRAN QUOC HUY',
+      },
+    },
   },
 ];

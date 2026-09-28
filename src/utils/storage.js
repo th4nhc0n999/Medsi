@@ -8,6 +8,7 @@ export const STORAGE_KEYS = {
   PAYMENTS: 'medsi_payments',
   BOOKING_DRAFT: 'medsi_bookingDraft',
   DOCTOR_SCHEDULES: 'medsi_doctorSchedules',
+  DOCTOR_PAYMENT_ACCOUNTS: 'medsi_doctorPaymentAccounts',
 };
 
 // Initial Seed Data Sets
@@ -337,6 +338,35 @@ export function saveDoctorSchedule(doctorId, dateStr, slots) {
 }
 
 /**
+ * Retrieve payment account configuration for a doctor
+ * @param {string} doctorId
+ * @returns {object|null}
+ */
+export function getDoctorPaymentAccount(doctorId) {
+  if (!doctorId) return null;
+  const accounts = getStorage(STORAGE_KEYS.DOCTOR_PAYMENT_ACCOUNTS, {});
+  return accounts[doctorId] || null;
+}
+
+/**
+ * Save payment account configuration for a doctor
+ * @param {string} doctorId
+ * @param {object} accountData
+ * @returns {object}
+ */
+export function saveDoctorPaymentAccount(doctorId, accountData) {
+  if (!doctorId || !accountData) return null;
+  const accounts = getStorage(STORAGE_KEYS.DOCTOR_PAYMENT_ACCOUNTS, {}) || {};
+  accounts[doctorId] = {
+    ...accountData,
+    updatedAt: new Date().toISOString(),
+  };
+  setStorage(STORAGE_KEYS.DOCTOR_PAYMENT_ACCOUNTS, accounts);
+  return accounts[doctorId];
+}
+
+
+/**
  * Seed initial data if not already present
  */
 export function initInitialStorage() {
@@ -383,6 +413,7 @@ export function resetToInitialStorage() {
   setStorage(STORAGE_KEYS.PAYMENTS, DEFAULT_PAYMENTS);
   setStorage(STORAGE_KEYS.DOCTOR_SCHEDULES, generateDefaultDoctorSchedules());
   removeStorage(STORAGE_KEYS.BOOKING_DRAFT);
+  removeStorage(STORAGE_KEYS.DOCTOR_PAYMENT_ACCOUNTS);
   window.dispatchEvent(new Event('medsi_storage_reset'));
   return true;
 }

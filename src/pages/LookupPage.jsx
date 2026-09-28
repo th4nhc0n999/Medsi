@@ -10,7 +10,9 @@ import {
   Sparkles, 
   FileText,
   ChevronRight,
-  ShieldCheck
+  ShieldCheck,
+  X,
+  RefreshCw,
 } from 'lucide-react';
 import BookingCard from '../components/BookingCard';
 import Modal from '../components/Modal';
@@ -143,6 +145,24 @@ export default function LookupPage() {
               <Search className="w-4 h-4" />
               <span>Tra cứu ngay</span>
             </button>
+            {(phoneInput || hasSearched) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setPhoneInput('');
+                  setSearchedPhone('');
+                  setResults([]);
+                  setHasSearched(false);
+                  setSearchParams({});
+                  setActionMessage({ text: '', type: '' });
+                }}
+                className="inline-flex items-center justify-center gap-1.5 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-bold text-sm transition-all cursor-pointer shrink-0"
+                title="Xóa và làm mới tra cứu"
+              >
+                <X className="w-4 h-4" />
+                <span>Làm mới</span>
+              </button>
+            )}
           </form>
 
           {/* Quick Click Sample Phones */}

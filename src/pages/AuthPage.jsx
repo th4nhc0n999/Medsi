@@ -12,9 +12,11 @@ import {
   ArrowRight,
   AlertCircle,
   CheckCircle2,
+  Stethoscope,
 } from 'lucide-react';
 import { STORAGE_KEYS, getStorage, setStorage } from '../utils/storage';
 import { generateUniqueId } from '../utils/generateCode';
+import { validateEmail, validatePhoneNumber, validateFullName } from '../utils/validators';
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -46,6 +48,8 @@ export default function AuthPage() {
         navigate(from, { replace: true });
       } else if (currentUser.role === 'admin') {
         navigate('/admin', { replace: true });
+      } else if (currentUser.role === 'doctor') {
+        navigate('/doctor', { replace: true });
       } else {
         navigate('/explore', { replace: true });
       }
@@ -92,6 +96,8 @@ export default function AuthPage() {
       navigate(from, { replace: true });
     } else if (foundUser.role === 'admin') {
       navigate('/admin', { replace: true });
+    } else if (foundUser.role === 'doctor') {
+      navigate('/doctor', { replace: true });
     } else {
       navigate('/explore', { replace: true });
     }
@@ -102,19 +108,21 @@ export default function AuthPage() {
     e.preventDefault();
     const errors = {};
 
-    if (!regFullName.trim()) {
-      errors.fullName = 'Họ và tên là bắt buộc';
+    const nameCheck = validateFullName(regFullName);
+    if (!nameCheck.isValid) {
+      errors.fullName = nameCheck.error;
     }
-    if (!regEmail.trim()) {
-      errors.email = 'Email là bắt buộc';
-    } else if (!/\S+@\S+\.\S+/.test(regEmail)) {
-      errors.email = 'Email không hợp lệ';
+
+    const emailCheck = validateEmail(regEmail);
+    if (!emailCheck.isValid) {
+      errors.email = emailCheck.error;
     }
-    if (!regPhone.trim()) {
-      errors.phone = 'Số điện thoại là bắt buộc';
-    } else if (!/^[0-9]{9,11}$/.test(regPhone.replace(/\s+/g, ''))) {
-      errors.phone = 'Số điện thoại gồm 9-11 chữ số';
+
+    const phoneCheck = validatePhoneNumber(regPhone);
+    if (!phoneCheck.isValid) {
+      errors.phone = phoneCheck.error;
     }
+
     if (!regPassword) {
       errors.password = 'Mật khẩu là bắt buộc';
     } else if (regPassword.length < 6) {
@@ -137,12 +145,14 @@ export default function AuthPage() {
       return;
     }
 
+    const normalizedPhone = phoneCheck.normalized || regPhone.trim();
+
     // Create new user
     const newUser = {
       id: generateUniqueId('usr'),
       fullName: regFullName.trim(),
       email: regEmail.trim().toLowerCase(),
-      phone: regPhone.trim(),
+      phone: normalizedPhone,
       password: regPassword,
       role: 'patient',
       createdAt: new Date().toISOString(),
@@ -159,7 +169,7 @@ export default function AuthPage() {
       fullName: newUser.fullName,
       dob: '1995-01-01',
       gender: 'Nam',
-      phone: newUser.phone,
+      phone: normalizedPhone,
       relationship: 'Bản thân',
       createdAt: new Date().toISOString(),
     };
@@ -281,7 +291,7 @@ export default function AuthPage() {
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block text-center">
                   Tài khoản dùng thử (1-Click điền)
                 </span>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <button
                     type="button"
                     onClick={() => handleQuickLogin('demo@medsi.vn', '123456')}
@@ -292,6 +302,18 @@ export default function AuthPage() {
                       <span>Bệnh nhân</span>
                     </div>
                     <p className="text-[10px] text-slate-500 truncate mt-0.5">demo@medsi.vn</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleQuickLogin('doctor@medsi.vn', '123456')}
+                    className="p-2 text-left rounded-xl border border-emerald-100 bg-emerald-50/60 hover:bg-emerald-100 text-emerald-900 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-1.5 text-xs font-bold">
+                      <Stethoscope className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Bác sĩ</span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 truncate mt-0.5">doctor@medsi.vn</p>
                   </button>
 
                   <button
@@ -341,7 +363,7 @@ export default function AuthPage() {
               {/* Email */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Email <span className="text-rose-500">*</span>
+                  Email / Gmail <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -361,7 +383,7 @@ export default function AuthPage() {
               {/* Phone */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Số điện thoại <span className="text-rose-500">*</span>
+                  Số điện thoại <span className="text-rose-500">*</span> <span className="text-[11px] font-normal text-slate-400 lowercase">(9 - 11 chữ số)</span>
                 </label>
                 <div className="relative">
                   <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />

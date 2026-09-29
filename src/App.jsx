@@ -11,6 +11,7 @@ import PaymentPage from './pages/PaymentPage';
 import AccountPage from './pages/AccountPage';
 import AdminPage from './pages/AdminPage';
 import LookupPage from './pages/LookupPage';
+import DoctorDashboardPage from './pages/DoctorDashboardPage';
 
 import { STORAGE_KEYS, getStorage, initInitialStorage } from './utils/storage';
 
@@ -26,12 +27,15 @@ function ScrollToTop() {
 }
 
 /**
- * Root Redirect Handler: Admin to /admin, others directly to /explore (NO forced login)
+ * Root Redirect Handler: Admin to /admin, Doctor to /doctor, others directly to /explore
  */
 function RootRedirect() {
   const currentUser = getStorage(STORAGE_KEYS.CURRENT_USER, null);
   if (currentUser && currentUser.role === 'admin') {
     return <Navigate to="/admin" replace />;
+  }
+  if (currentUser && currentUser.role === 'doctor') {
+    return <Navigate to="/doctor" replace />;
   }
   return <Navigate to="/explore" replace />;
 }
@@ -54,6 +58,17 @@ function RequireAuth({ children }) {
 function RequireAdmin({ children }) {
   const currentUser = getStorage(STORAGE_KEYS.CURRENT_USER, null);
   if (!currentUser || currentUser.role !== 'admin') {
+    return <Navigate to="/explore" replace />;
+  }
+  return children;
+}
+
+/**
+ * Protected Route wrapper for Doctor users only
+ */
+function RequireDoctor({ children }) {
+  const currentUser = getStorage(STORAGE_KEYS.CURRENT_USER, null);
+  if (!currentUser || currentUser.role !== 'doctor') {
     return <Navigate to="/explore" replace />;
   }
   return children;
@@ -124,6 +139,16 @@ export default function App() {
                 <RequireAdmin>
                   <AdminPage />
                 </RequireAdmin>
+              }
+            />
+
+            {/* 8. Doctor Dashboard */}
+            <Route
+              path="/doctor"
+              element={
+                <RequireDoctor>
+                  <DoctorDashboardPage />
+                </RequireDoctor>
               }
             />
 

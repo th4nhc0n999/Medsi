@@ -14,12 +14,14 @@ import {
   AlertTriangle,
   CheckCircle2,
   Filter,
+  RefreshCw,
 } from 'lucide-react';
 import BookingCard from '../components/BookingCard';
 import PatientProfileCard from '../components/PatientProfileCard';
 import Modal from '../components/Modal';
 import { STORAGE_KEYS, getStorage, setStorage } from '../utils/storage';
 import { generateUniqueId } from '../utils/generateCode';
+import { validatePatientDob, validatePhoneNumber, validateFullName } from '../utils/validators';
 
 export default function AccountPage() {
   const navigate = useNavigate();
@@ -35,6 +37,26 @@ export default function AccountPage() {
   // Data states
   const [bookings, setBookings] = useState([]);
   const [profiles, setProfiles] = useState([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
+
+  const showToast = (message) => {
+    setToastMessage(message);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    const user = getStorage(STORAGE_KEYS.CURRENT_USER, null);
+    if (user) {
+      const allBookings = getStorage(STORAGE_KEYS.BOOKINGS, []);
+      setBookings(allBookings.filter((b) => b.userId === user.id));
+      const allProfiles = getStorage(STORAGE_KEYS.PATIENT_PROFILES, []);
+      setProfiles(allProfiles.filter((p) => p.userId === user.id));
+    }
+    showToast('Đã làm mới dữ liệu tài khoản');
+    setTimeout(() => setIsRefreshing(false), 450);
+  };
 
   // Profile Modal State (Add or Edit)
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -127,19 +149,25 @@ export default function AccountPage() {
     e.preventDefault();
     setProfileError('');
 
-    if (!profileFullName.trim()) {
-      setProfileError('Vui lòng nhập họ và tên');
-      return;
-    }
-    if (!profileDob) {
-      setProfileError('Vui lòng chọn ngày sinh');
-      return;
-    }
-    if (!profilePhone.trim()) {
-      setProfileError('Vui lòng nhập số điện thoại');
+    const nameCheck = validateFullName(profileFullName);
+    if (!nameCheck.isValid) {
+      setProfileError(nameCheck.error);
       return;
     }
 
+    const dobCheck = validatePatientDob(profileDob);
+    if (!dobCheck.isValid) {
+      setProfileError(dobCheck.error);
+      return;
+    }
+
+    const phoneCheck = validatePhoneNumber(profilePhone);
+    if (!phoneCheck.isValid) {
+      setProfileError(phoneCheck.error);
+      return;
+    }
+
+    const normalizedPhone = phoneCheck.normalized;
     const allProfiles = getStorage(STORAGE_KEYS.PATIENT_PROFILES, []);
 
     if (editingProfileId) {
@@ -151,7 +179,7 @@ export default function AccountPage() {
             fullName: profileFullName.trim(),
             dob: profileDob,
             gender: profileGender,
-            phone: profilePhone.trim(),
+            phone: normalizedPhone,
             relationship: profileRelationship,
             address: profileAddress.trim(),
           };
@@ -168,7 +196,7 @@ export default function AccountPage() {
         fullName: profileFullName.trim(),
         dob: profileDob,
         gender: profileGender,
-        phone: profilePhone.trim(),
+        phone: normalizedPhone,
         relationship: profileRelationship,
         address: profileAddress.trim(),
         createdAt: new Date().toISOString(),
@@ -250,8 +278,8 @@ export default function AccountPage() {
               </div>
             </div>
 
-            {/* Quick stats badge */}
-            <div className="flex items-center gap-3">
+            {/* Quick stats badge & Refresh */}
+            <div className="flex items-center gap-2.5 flex-wrap">
               <div className="px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100 text-center">
                 <span className="text-lg font-extrabold text-sky-700 block">
                   {currentBookings.length}
@@ -264,6 +292,16 @@ export default function AccountPage() {
                 </span>
                 <span className="text-[10px] text-slate-400 font-bold uppercase">Hồ sơ người khám</span>
               </div>
+              <button
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                type="button"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-white border border-slate-200 hover:border-slate-300 active:scale-95 text-slate-700 text-xs font-bold rounded-2xl shadow-xs transition-all cursor-pointer disabled:opacity-60"
+                title="Cập nhật lại lịch khám và hồ sơ"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 text-sky-600 ${isRefreshing ? 'animate-spin' : ''}`} />
+                <span>{isRefreshing ? 'Đang tải...' : 'Làm mới'}</span>
+              </button>
             </div>
           </div>
         </div>
@@ -577,6 +615,8 @@ export default function AccountPage() {
               <input
                 type="date"
                 value={profileDob}
+                max={new Date().toISOString().slice(0, 10)}
+                min="1900-01-01"
                 onChange={(e) => setProfileDob(e.target.value)}
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-hidden focus:border-sky-500 focus:bg-white text-slate-800"
               />
@@ -599,7 +639,7 @@ export default function AccountPage() {
 
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-              Số điện thoại liên hệ <span className="text-rose-500">*</span>
+              Số điện thoại liên hệ <span className="text-rose-500">*</span> <span className="text-[11px] font-normal text-slate-400 lowercase">(9 - 11 chữ số)</span>
             </label>
             <input
               type="tel"
@@ -695,6 +735,14 @@ export default function AccountPage() {
           </div>
         )}
       </Modal>
+
+      {/* FLOATING TOAST NOTIFICATION */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 bg-slate-900/95 text-white text-xs font-semibold rounded-2xl shadow-2xl border border-slate-700/80 backdrop-blur-md animate-fade-in transition-all">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
     </div>
   );
 }

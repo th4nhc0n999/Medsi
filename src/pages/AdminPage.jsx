@@ -28,6 +28,7 @@ import StatusBadge from '../components/StatusBadge';
 import Modal from '../components/Modal';
 import { STORAGE_KEYS, getStorage, setStorage, resetToInitialStorage } from '../utils/storage';
 import { formatCurrency } from '../utils/formatCurrency';
+import { buildCSVContent, downloadCSV } from '../utils/csvExport';
 
 export default function AdminPage() {
   const navigate = useNavigate();
@@ -45,6 +46,7 @@ export default function AdminPage() {
   const [bookingToDelete, setBookingToDelete] = useState(null);
   const [showResetModal, setShowResetModal] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const showToast = (message, type = 'success') => {
     setToastMessage({ message, type });
@@ -67,6 +69,18 @@ export default function AdminPage() {
   const loadBookings = () => {
     const allBookings = getStorage(STORAGE_KEYS.BOOKINGS, []);
     setBookings(allBookings);
+    return allBookings;
+  };
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    const updated = loadBookings();
+    setSearchQuery('');
+    setStatusFilter('all');
+    showToast(`Đã làm mới dữ liệu (${updated.length} lịch khám)`, 'info');
+    setTimeout(() => {
+      setIsRefreshing(false);
+    }, 450);
   };
 
   // 1. Mark Paid: unpaid -> paid
@@ -190,6 +204,8 @@ export default function AdminPage() {
   const handleConfirmReset = () => {
     resetToInitialStorage();
     loadBookings();
+    setSearchQuery('');
+    setStatusFilter('all');
     setShowResetModal(false);
     showToast('Đã khôi phục toàn bộ dữ liệu mẫu ban đầu thành công!');
   };
@@ -218,42 +234,29 @@ export default function AdminPage() {
     ];
 
     const rows = listToExport.map((b) => [
-      `"${b.code || ''}"`,
-      `"${b.patientName || ''}"`,
-      `"${b.patientPhone || ''}"`,
-      `"${(b.providerName || '').replace(/"/g, '""')}"`,
-      `"${(b.specialtyName || '').replace(/"/g, '""')}"`,
-      `"${b.date || ''}"`,
-      `"${b.startTime || ''} - ${b.endTime || ''}"`,
-      `"${b.totalAmount || 0}"`,
-      `"${b.paymentStatus === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán'}"`,
-      `"${
-        b.status === 'approved'
-          ? 'Đã duyệt'
-          : b.status === 'completed'
-          ? 'Hoàn thành'
-          : b.status === 'cancelled'
-          ? 'Đã hủy'
-          : 'Chờ duyệt'
-      }"`,
-      `"${(b.cancelReason || '').replace(/"/g, '""')}"`,
-      `"${b.createdAt || ''}"`,
+      b.code || '',
+      b.patientName || '',
+      b.patientPhone || '',
+      b.providerName || '',
+      b.specialtyName || '',
+      b.date || '',
+      `${b.startTime || ''} - ${b.endTime || ''}`,
+      b.totalAmount || 0,
+      b.paymentStatus === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán',
+      b.status === 'approved'
+        ? 'Đã duyệt'
+        : b.status === 'completed'
+        ? 'Hoàn thành'
+        : b.status === 'cancelled'
+        ? 'Đã hủy'
+        : 'Chờ duyệt',
+      b.cancelReason || '',
+      b.createdAt || '',
     ]);
 
-    const csvContent =
-      '\uFEFF' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\r\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute(
-      'download',
-      `medsi_danh_sach_lich_kham_${new Date().toISOString().slice(0, 10)}.csv`
-    );
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    const csvContent = buildCSVContent(headers, rows);
+    const fileName = `medsi_danh_sach_lich_kham_${new Date().toISOString().slice(0, 10)}.csv`;
+    downloadCSV(csvContent, fileName);
     showToast(`Đã xuất file CSV với ${listToExport.length} lịch khám`);
   };
 
@@ -345,12 +348,14 @@ export default function AdminPage() {
             </button>
 
             <button
-              onClick={loadBookings}
+              onClick={handleRefresh}
+              disabled={isRefreshing}
               type="button"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 hover:border-slate-300 active:scale-95 text-slate-700 text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer disabled:opacity-60"
+              title="Làm mới lại dữ liệu và đặt lại bộ lọc"
             >
-              <RefreshCw className="w-3.5 h-3.5 text-sky-600" />
-              <span>Làm mới</span>
+              <RefreshCw className={`w-3.5 h-3.5 text-sky-600 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span>{isRefreshing ? 'Đang làm mới...' : 'Làm mới'}</span>
             </button>
           </div>
         </div>
@@ -924,6 +929,22 @@ export default function AdminPage() {
           </div>
         </div>
       </Modal>
+
+      {/* FLOATING TOAST NOTIFICATION */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 bg-slate-900/95 text-white text-xs font-semibold rounded-2xl shadow-2xl border border-slate-700/80 backdrop-blur-md animate-fade-in transition-all">
+          {toastMessage.type === 'error' ? (
+            <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
+          ) : toastMessage.type === 'warning' ? (
+            <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+          ) : toastMessage.type === 'info' ? (
+            <RefreshCw className="w-4 h-4 text-sky-400 shrink-0" />
+          ) : (
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          )}
+          <span>{toastMessage.message}</span>
+        </div>
+      )}
     </div>
   );
 }

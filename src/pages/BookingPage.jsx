@@ -217,6 +217,23 @@ export default function BookingPage() {
       return;
     }
 
+    // Double-Booking Guard: Re-verify that slot is still available right now
+    const latestBookings = getStorage(STORAGE_KEYS.BOOKINGS, []);
+    const isSlotConflict = latestBookings.some(
+      (b) =>
+        b.date === selectedDate &&
+        b.startTime === selectedSlot &&
+        b.status !== 'cancelled' &&
+        ((isDoctor && b.doctorId === id) || (!isDoctor && b.hospitalId === id))
+    );
+    if (isSlotConflict) {
+      setStepError(
+        `Rất tiếc! Khung giờ ${selectedSlot} ngày ${selectedDate} vừa có người khác đặt trước. Vui lòng chọn khung giờ khác!`
+      );
+      setSelectedSlot('');
+      return;
+    }
+
     // Ensure currentUser
     let user = getStorage(STORAGE_KEYS.CURRENT_USER, null);
     if (!user) {
@@ -572,6 +589,12 @@ export default function BookingPage() {
                 <img
                   src={isDoctor ? doctor.avatar : hospital.image}
                   alt={isDoctor ? doctor.name : hospital.name}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = isDoctor
+                      ? 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=400&auto=format&fit=crop&q=80'
+                      : 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=600&auto=format&fit=crop&q=80';
+                  }}
                   className="w-16 h-16 rounded-2xl object-cover shrink-0 border border-slate-100 shadow-xs"
                 />
                 <div className="min-w-0">

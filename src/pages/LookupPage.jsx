@@ -17,6 +17,7 @@ import {
 import BookingCard from '../components/BookingCard';
 import Modal from '../components/Modal';
 import { STORAGE_KEYS, getStorage, setStorage } from '../utils/storage';
+import { validatePhoneNumber } from '../utils/validators';
 
 export default function LookupPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -46,21 +47,24 @@ export default function LookupPage() {
       return;
     }
 
-    const normalizedQuery = clean.replace(/\D/g, '');
-    if (normalizedQuery.length < 9 || normalizedQuery.length > 11) {
+    const phoneValidation = validatePhoneNumber(clean);
+    if (!phoneValidation.isValid) {
       setActionMessage({
-        text: 'Vui lòng nhập đầy đủ số điện thoại từ 9 đến 11 chữ số để tra cứu chính xác',
+        text: phoneValidation.error || 'Vui lòng nhập đầy đủ số điện thoại từ 9 đến 11 chữ số để tra cứu chính xác',
         type: 'error',
       });
       return;
     }
 
+    const normalizedQuery = phoneValidation.normalized;
+
     setActionMessage({ text: '', type: '' });
     const allBookings = getStorage(STORAGE_KEYS.BOOKINGS, []);
 
     const matched = allBookings.filter((b) => {
-      const bPhone = (b.patientPhone || '').replace(/\D/g, '');
-      return bPhone === normalizedQuery;
+      const bPhoneRaw = (b.patientPhone || '').trim();
+      const bNormalized = validatePhoneNumber(bPhoneRaw).normalized || bPhoneRaw.replace(/\D/g, '');
+      return bNormalized === normalizedQuery;
     });
 
     setResults(matched);

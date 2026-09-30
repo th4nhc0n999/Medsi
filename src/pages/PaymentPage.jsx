@@ -336,12 +336,6 @@ export default function PaymentPage() {
                   return (
                     <label
                       key={method.id}
-                      onClick={() => {
-                        setSelectedMethod(method.id);
-                        if (isExpired) {
-                          handleResetTimer();
-                        }
-                      }}
                       className={`flex items-start gap-3.5 p-4 rounded-2xl border transition-all cursor-pointer ${
                         isSelected
                           ? method.id === 'ewallet'
@@ -354,12 +348,7 @@ export default function PaymentPage() {
                         type="radio"
                         name="paymentMethod"
                         checked={isSelected}
-                        onChange={() => {
-                          setSelectedMethod(method.id);
-                          if (isExpired) {
-                            handleResetTimer();
-                          }
-                        }}
+                        onChange={() => setSelectedMethod(method.id)}
                         className={`mt-1 cursor-pointer ${
                           method.id === 'ewallet'
                             ? 'text-[#d82d8b] focus:ring-[#d82d8b]'

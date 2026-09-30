@@ -356,6 +356,10 @@ export default function DoctorDashboardPage() {
                 <img
                   src={doctorInfo.avatar}
                   alt={doctorInfo.name}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=400&auto=format&fit=crop&q=80';
+                  }}
                   className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-emerald-500 shadow-md shadow-emerald-500/10"
                 />
                 <span className="absolute -bottom-1 -right-1 px-2 py-0.5 bg-emerald-600 text-white text-[10px] font-extrabold uppercase rounded-lg shadow-xs">

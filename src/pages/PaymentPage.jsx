@@ -159,7 +159,8 @@ export default function PaymentPage() {
   ];
 
   const handleProcessPayment = () => {
-    if (isExpired) {
+    const isQrOrWallet = selectedMethod === 'qr' || selectedMethod === 'ewallet';
+    if (isQrOrWallet && isExpired) {
       return;
     }
 

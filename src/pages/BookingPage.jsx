@@ -400,14 +400,32 @@ export default function BookingPage() {
                 </div>
                 <SlotPicker
                   selectedDate={selectedDate}
-                  onSelectDate={(d) => {
-                    setSelectedDate(d);
+                  onSelectDate={(newDate) => {
+                    setSelectedDate(newDate);
+
+                    const currentBookings = getStorage(STORAGE_KEYS.BOOKINGS, []);
+                    const bookedOnNewDate = currentBookings
+                      .filter(
+                        (b) =>
+                          b.date === newDate &&
+                          b.status !== 'cancelled' &&
+                          ((isDoctor && b.doctorId === id) || (!isDoctor && b.hospitalId === id))
+                      )
+                      .map((b) => b.startTime);
+
                     if (isDoctor) {
-                      const slotsForDate = getDoctorSchedule(id, d);
-                      if (!slotsForDate.includes(selectedSlot) || isSlotPast(d, selectedSlot)) {
+                      const slotsForDate = getDoctorSchedule(id, newDate);
+                      if (
+                        !slotsForDate.includes(selectedSlot) ||
+                        bookedOnNewDate.includes(selectedSlot) ||
+                        isSlotPast(newDate, selectedSlot)
+                      ) {
                         setSelectedSlot('');
                       }
-                    } else if (selectedSlot && isSlotPast(d, selectedSlot)) {
+                    } else if (
+                      bookedOnNewDate.includes(selectedSlot) ||
+                      (selectedSlot && isSlotPast(newDate, selectedSlot))
+                    ) {
                       setSelectedSlot('');
                     }
                   }}

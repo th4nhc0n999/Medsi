@@ -33,6 +33,11 @@ export function formatCSVCell(value, preserveLeadingZeros = false, delimiter = '
   // Escape double quotes by doubling them
   const escaped = str.replace(/"/g, '""');
 
+  // Vô hiệu hóa CSV Formula Injection cho các ô văn bản
+  if (/^[=+\-@]/.test(str.trim()) && !str.trim().startsWith('="')) {
+    return `"'\t${escaped}"`;
+  }
+
   // Enclose in quotes if it contains delimiter, double quotes, or newlines
   if (
     escaped.includes(delimiter) ||

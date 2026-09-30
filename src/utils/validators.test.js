@@ -285,4 +285,11 @@ describe('5. CSV Export Content & Vietnamese Character Preservation', () => {
     const cell = formatCSVCell('0901234567', true, ';');
     expect(cell).toBe('="0901234567"');
   });
+
+  it('neutralizes potential CSV formula injection starting with =, +, -, @', () => {
+    expect(formatCSVCell('=SUM(100+200)', false, ';')).toBe('"\'\t=SUM(100+200)"');
+    expect(formatCSVCell('+123456789', false, ';')).toBe('"\'\t+123456789"');
+    expect(formatCSVCell('-cmd|/C calc!A0', false, ';')).toBe('"\'\t-cmd|/C calc!A0"');
+    expect(formatCSVCell('@SUM(A1:A10)', false, ';')).toBe('"\'\t@SUM(A1:A10)"');
+  });
 });

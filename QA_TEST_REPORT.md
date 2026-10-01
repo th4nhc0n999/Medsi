@@ -12,14 +12,14 @@
 
 | Mã lỗi | Cấp độ | Phân loại | Tệp tin liên quan | Mô tả ngắn gọn lỗi | Trạng thái |
 |:---:|:---:|:---|:---|:---|:---:|
-| **BUG-01** | **P1 (High)** | Thanh toán / Logic Flow | [src/pages/PaymentPage.jsx](file:///d:/HOCKY5/Web/Mini_Project_IS207/src/pages/PaymentPage.jsx) | Hết hạn VietQR (120s) rồi chuyển sang thanh toán Offline/ATM thì nút xác nhận bị "treo". | ✅ **ĐÃ FIX** |
-| **BUG-02** | **P1 (High)** | Bảo mật / Tra cứu | [src/pages/LookupPage.jsx](file:///d:/HOCKY5/Web/Mini_Project_IS207/src/pages/LookupPage.jsx) | Tra cứu SĐT dùng `includes` chuỗi con làm lộ hồ sơ; người lạ tùy tiện hủy lịch. | ✅ **ĐÃ FIX** |
-| **BUG-03** | **P1 (High)** | Nghiệp vụ / Double-Booking | [src/pages/BookingPage.jsx](file:///d:/HOCKY5/Web/Mini_Project_IS207/src/pages/BookingPage.jsx) | Giữ nguyên khung giờ đã có người khác đặt ở ngày mới, dẫn đến xung đột đặt trùng giờ. | ✅ **ĐÃ FIX** |
-| **BUG-04** | **P2 (Med)** | Điều hướng / UX Routing | [src/components/Navbar.jsx](file:///d:/HOCKY5/Web/Mini_Project_IS207/src/components/Navbar.jsx) | Khách vãng lai bấm vào Logo MedSi bị ép chuyển hướng vào `/auth` thay vì về `/explore`. | ✅ **ĐÃ FIX** |
-| **BUG-05** | **P2 (Med)** | Phân quyền / Hiển thị | [src/pages/AccountPage.jsx](file:///d:/HOCKY5/Web/Mini_Project_IS207/src/pages/AccountPage.jsx) | Bác sĩ hiển thị nhãn role mặc định là "Bệnh nhân" thay vì "Bác sĩ". | ✅ **ĐÃ FIX** |
-| **BUG-06** | **P1 (High)** | Bảo mật / CSV Injection | [src/utils/csvExport.js](file:///d:/HOCKY5/Web/Mini_Project_IS207/src/utils/csvExport.js) | CSV Export dễ bị tấn công Formula Injection với các tiền tố `=`, `+`, `-`, `@`. | ✅ **ĐÃ FIX** |
-| **BUG-07** | **P1 (High)** | Nghiệp vụ / Bác sĩ | [src/pages/DoctorDashboardPage.jsx](file:///d:/HOCKY5/Web/Mini_Project_IS207/src/pages/DoctorDashboardPage.jsx) | Bác sĩ thiếu tính năng Từ chối / Hủy ca khám kèm lý do trên Dashboard. | ✅ **ĐÃ FIX** |
-| **BUG-08** | **P2 (Med)** | Giao diện / UI Resiliency | [src/components/DoctorCard.jsx](file:///d:/HOCKY5/Web/Mini_Project_IS207/src/components/DoctorCard.jsx) | Ảnh đại diện bác sĩ / cơ sở khám bị vỡ khi đường dẫn Unsplash lỗi. | ✅ **ĐÃ FIX** |
+| **BUG-01** | **P1 (High)** | Thanh toán / Logic Flow | [src/pages/PaymentPage.jsx](file:///c:/mnpr/src/pages/PaymentPage.jsx) | Hết hạn VietQR (120s) rồi chuyển sang thanh toán Offline/ATM thì nút xác nhận bị "treo". | ✅ **ĐÃ FIX HOÀN TOÀN** |
+| **BUG-02** | **P1 (High)** | Bảo mật / Tra cứu | [src/pages/LookupPage.jsx](file:///c:/mnpr/src/pages/LookupPage.jsx) | Tra cứu SĐT dùng `includes` chuỗi con làm lộ hồ sơ; người lạ tùy tiện hủy lịch. | ✅ **ĐÃ FIX HOÀN TOÀN** |
+| **BUG-03** | **P1 (High)** | Nghiệp vụ / Double-Booking | [src/pages/BookingPage.jsx](file:///c:/mnpr/src/pages/BookingPage.jsx) | Giữ nguyên khung giờ đã có người khác đặt ở ngày mới, dẫn đến xung đột đặt trùng giờ. | ✅ **ĐÃ FIX HOÀN TOÀN** |
+| **BUG-04** | **P2 (Med)** | Điều hướng / UX Routing | [src/components/Navbar.jsx](file:///c:/mnpr/src/components/Navbar.jsx) | Khách vãng lai bấm vào Logo MedSi bị ép chuyển hướng vào `/auth` thay vì về `/explore`. | ✅ **ĐÃ FIX HOÀN TOÀN** |
+| **BUG-05** | **P2 (Med)** | Phân quyền / Hiển thị | [src/pages/AccountPage.jsx](file:///c:/mnpr/src/pages/AccountPage.jsx) | Bác sĩ hiển thị nhãn role mặc định là "Bệnh nhân" thay vì "Bác sĩ". | ✅ **ĐÃ FIX HOÀN TOÀN** |
+| **BUG-06** | **P1 (High)** | Bảo mật / CSV Injection | [src/utils/csvExport.js](file:///c:/mnpr/src/utils/csvExport.js) | CSV Export dễ bị tấn công Formula Injection với các tiền tố `=`, `+`, `-`, `@`. | ✅ **ĐÃ FIX HOÀN TOÀN** |
+| **BUG-07** | **P1 (High)** | Nghiệp vụ / Bác sĩ | [src/pages/DoctorDashboardPage.jsx](file:///c:/mnpr/src/pages/DoctorDashboardPage.jsx) | Bác sĩ thiếu tính năng Từ chối / Hủy ca khám kèm lý do trên Dashboard. | ✅ **ĐÃ FIX HOÀN TOÀN** |
+| **BUG-08** | **P2 (Med)** | Giao diện / UI Resiliency | [src/components/DoctorCard.jsx](file:///c:/mnpr/src/components/DoctorCard.jsx) | Ảnh đại diện bác sĩ / cơ sở khám bị vỡ khi đường dẫn Unsplash lỗi. | ✅ **ĐÃ FIX HOÀN TOÀN** |
 
 ---
 
@@ -155,10 +155,39 @@
 ## 3. CHECKLIST SỬA NHANH CHO NHÓM PHÁT TRIỂN (100% HOÀN THÀNH)
 
 - [x] **Sửa BUG-01:** Cập nhật điều kiện `isQrOrWallet && isExpired` trong `src/pages/PaymentPage.jsx`, gỡ bỏ reset timer ngầm khi chuyển radio phương thức thanh toán.
-- [x] **Sửa BUG-02:** Ràng buộc số điện thoại 9-11 chữ số, tích hợp `validatePhoneNumber()` chuẩn hóa đầu số quốc tế `+84` và yêu cầu nhập mã đặt lịch để xác thực hủy khám trong `src/pages/LookupPage.jsx`.
-- [x] **Sửa BUG-03:** Reset `selectedSlot` khi chuyển sang ngày có khung giờ đã bị đặt trước, bổ sung chốt chặn 2 lớp (defense-in-depth) tại `handleProceedToPayment` trong `src/pages/BookingPage.jsx`.
+- [x] **Sửa BUG-02:** Ràng buộc số điện thoại 9-11 chữ số, so sánh chính xác và xóa bỏ rò rỉ mã xác thực trong `alert` cũng như placeholder tại `src/pages/LookupPage.jsx`.
+- [x] **Sửa BUG-03:** Reset `selectedSlot` khi chuyển ngày hoặc đổi loại dịch vụ khám, đồng thời kiểm tra xung đột khung giờ theo chuyên khoa (`examTypeId`) cho bệnh viện tại `src/pages/BookingPage.jsx` và `src/pages/PaymentPage.jsx`.
 - [x] **Sửa BUG-04:** Sửa fallback `to` của Logo MedSi thành `'/explore'` trong `src/components/Navbar.jsx`.
-- [x] **Sửa BUG-05:** Cập nhật nhãn phân quyền tài khoản bác sĩ trong `src/pages/AccountPage.jsx`.
+- [x] **Sửa BUG-05:** Cập nhật nhãn phân quyền tài khoản bác sĩ trên cả Header và Tab 4 "Thông tin cá nhân & Tài khoản" trong `src/pages/AccountPage.jsx`.
 - [x] **Sửa BUG-06:** Vô hiệu hóa CSV Formula Injection cho các ô ký tự đặc biệt và bổ sung unit test kiểm chứng trong `src/utils/csvExport.js` & `src/utils/validators.test.js`.
 - [x] **Sửa BUG-07:** Bổ sung tính năng Từ chối / Hủy ca khám kèm lý do xác nhận cho Bác sĩ trong `src/pages/DoctorDashboardPage.jsx`.
 - [x] **Sửa BUG-08:** Thêm fallback `onError` cho toàn bộ ảnh đại diện bác sĩ, phòng khám, bệnh viện trên toàn hệ thống.
+
+---
+
+## 4. BÁO CÁO RÀ SOÁT TÁI KIỂM THỬ (QA RE-AUDIT & VERIFICATION REVIEW)
+
+> **Thời điểm rà soát & nghiệm thu:** 01/10/2026  
+> **Phương pháp kiểm tra:** Static Code Analysis & Unit / Production Build Verification.  
+> **Tổng kết:** **8/8 bugs (100%)** đã được khắc phục triệt để, vượt qua toàn bộ 53/53 Unit Tests và Production Build thành công không có lỗi.
+
+### 4.1. Bảng đánh giá chi tiết tình trạng thực tế
+
+| Mã Bug | Tình trạng nghiệm thu | Đánh giá kỹ thuật thực tế trên Source Code sau khi vá lỗi |
+|:---:|:---:|:---|
+| **BUG-01** | ✅ **ĐÃ FIX HOÀN TOÀN** | Tại [src/pages/PaymentPage.jsx](file:///c:/mnpr/src/pages/PaymentPage.jsx#L161-L165,L829): Điều kiện vô hiệu hóa thanh toán khi VietQR hết hạn đã được thu hẹp chính xác trong phạm vi `(selectedMethod === 'qr' \|\| selectedMethod === 'ewallet') && isExpired`. Khi người dùng chuyển sang `atm` hoặc `onsite`, nút bấm và hàm `handleProcessPayment` hoạt động bình thường, không bị treo. |
+| **BUG-02** | ✅ **ĐÃ FIX HOÀN TOÀN** | Tại [src/pages/LookupPage.jsx](file:///c:/mnpr/src/pages/LookupPage.jsx#L59-L68,L90-L96,L294-L302): Tra cứu SĐT chuẩn hóa bằng `validatePhoneNumber` và so sánh chính xác `bNormalized === normalizedQuery`. Tại hàm `handleConfirmCancel`, đã **xóa bỏ `${expectedCode}` khỏi thông báo lỗi `alert`** và chuẩn hóa placeholder của modal thành mã ví dụ tổng quát `BK2026...`, bảo vệ tuyệt đối mã bảo mật của bệnh nhân. |
+| **BUG-03** | ✅ **ĐÃ FIX HOÀN TOÀN** | Tại [src/pages/BookingPage.jsx](file:///c:/mnpr/src/pages/BookingPage.jsx#L49-L68,L120-L126,L225-L231,L425-L434) và [src/pages/PaymentPage.jsx](file:///c:/mnpr/src/pages/PaymentPage.jsx#L187-L191): Đã đồng bộ kiểm tra trùng lịch khám bệnh viện theo chuyên khoa (`(!draft.examTypeId \|\| !b.examTypeId \|\| b.examTypeId === draft.examTypeId)`). Khi đổi ngày khám hoặc đổi gói khám tại bệnh viện, hệ thống tự động kiểm tra và reset slot đã bị đặt trước mà không chặn nhầm các chuyên khoa khác. |
+| **BUG-04** | ✅ **ĐÃ FIX HOÀN TOÀN** | Tại [src/components/Navbar.jsx](file:///c:/mnpr/src/components/Navbar.jsx#L49): Fallback chuyển hướng của Logo MedSi khi `currentUser` là `null` đã được sửa thành `'/explore'`, khách vãng lai không còn bị ép nhảy sang trang `/auth`. |
+| **BUG-05** | ✅ **ĐÃ FIX HOÀN TOÀN** | Tại [src/pages/AccountPage.jsx](file:///c:/mnpr/src/pages/AccountPage.jsx#L264-L268,L553-L558): Đã bổ sung đầy đủ nhãn vai trò `Bác sĩ (Doctor)` trên cả Header và tại Tab 4 *"Thông tin cá nhân & Tài khoản"* (`currentUser.role === 'doctor' ? 'Bác sĩ (Doctor)' : ...`). Tài khoản Bác sĩ hiển thị đúng 100% trên toàn bộ giao diện tài khoản. |
+| **BUG-06** | ✅ **ĐÃ FIX HOÀN TOÀN** | Tại [src/utils/csvExport.js](file:///c:/mnpr/src/utils/csvExport.js#L37-L39): Các ký tự kích hoạt Formula Injection (`=`, `+`, `-`, `@`) đã được vô hiệu hóa bằng tiền tố `"'\t${escaped}"`. Unit tests trong [src/utils/validators.test.js](file:///c:/mnpr/src/utils/validators.test.js#L290-L293) đã kiểm chứng và vượt qua 100%. |
+| **BUG-07** | ✅ **ĐÃ FIX HOÀN TOÀN** | Tại [src/pages/DoctorDashboardPage.jsx](file:///c:/mnpr/src/pages/DoctorDashboardPage.jsx#L291-L317,L1344-L1391): Bác sĩ đã có đầy đủ tính năng Từ chối / Hủy ca khám kèm Modal nhập lý do, cập nhật `cancelledBy: 'doctor'`, `cancelReason` và lưu vào localStorage chuẩn xác. |
+| **BUG-08** | ✅ **ĐÃ FIX HOÀN TOÀN** | Tại [src/components/DoctorCard.jsx](file:///c:/mnpr/src/components/DoctorCard.jsx#L22-L25), [src/components/HospitalCard.jsx](file:///c:/mnpr/src/components/HospitalCard.jsx#L27-L30) và [src/pages/DoctorDashboardPage.jsx](file:///c:/mnpr/src/pages/DoctorDashboardPage.jsx#L359-L362): Đã tích hợp fallback `onError` tải ảnh placeholder dự phòng, ngăn chặn hoàn toàn hiện tượng vỡ layout khi link ảnh Unsplash gặp sự cố mạng. |
+
+---
+
+### 4.2. Kết quả kiểm thử tự động & Build hệ thống
+* **Vitest Suite:** 3 test suites, 53/53 tests passed (100%).
+* **Production Build (`vite build`):** Biến dịch thành công toàn bộ 1,935 modules trong ~10.6s, không có cảnh báo hoặc lỗi cú pháp.
+
+

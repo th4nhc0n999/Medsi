@@ -49,6 +49,24 @@ export default function BookingPage() {
     hospital?.examTypes?.[0] || null
   );
 
+  const handleSelectExamType = (et) => {
+    setSelectedExamType(et);
+    if (selectedSlot) {
+      const currentBookings = getStorage(STORAGE_KEYS.BOOKINGS, []);
+      const isBookedForNewType = currentBookings.some(
+        (b) =>
+          b.date === selectedDate &&
+          b.startTime === selectedSlot &&
+          b.status !== 'cancelled' &&
+          b.hospitalId === id &&
+          (!b.examTypeId || b.examTypeId === et.id)
+      );
+      if (isBookedForNewType) {
+        setSelectedSlot('');
+      }
+    }
+  };
+
   // Form selections (React State)
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
@@ -118,7 +136,10 @@ export default function BookingPage() {
       (b) =>
         b.date === selectedDate &&
         b.status !== 'cancelled' &&
-        ((isDoctor && b.doctorId === id) || (!isDoctor && b.hospitalId === id))
+        ((isDoctor && b.doctorId === id) ||
+          (!isDoctor &&
+            b.hospitalId === id &&
+            (!selectedExamType?.id || !b.examTypeId || b.examTypeId === selectedExamType.id)))
     )
     .map((b) => b.startTime);
 
@@ -224,7 +245,10 @@ export default function BookingPage() {
         b.date === selectedDate &&
         b.startTime === selectedSlot &&
         b.status !== 'cancelled' &&
-        ((isDoctor && b.doctorId === id) || (!isDoctor && b.hospitalId === id))
+        ((isDoctor && b.doctorId === id) ||
+          (!isDoctor &&
+            b.hospitalId === id &&
+            (!selectedExamType?.id || !b.examTypeId || b.examTypeId === selectedExamType.id)))
     );
     if (isSlotConflict) {
       setStepError(
@@ -379,7 +403,7 @@ export default function BookingPage() {
                       return (
                         <div
                           key={et.id}
-                          onClick={() => setSelectedExamType(et)}
+                          onClick={() => handleSelectExamType(et)}
                           className={`p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer ${
                             isSelected
                               ? 'border-cyan-500 bg-cyan-50/70 ring-2 ring-cyan-500'
@@ -426,7 +450,10 @@ export default function BookingPage() {
                         (b) =>
                           b.date === newDate &&
                           b.status !== 'cancelled' &&
-                          ((isDoctor && b.doctorId === id) || (!isDoctor && b.hospitalId === id))
+                          ((isDoctor && b.doctorId === id) ||
+                            (!isDoctor &&
+                              b.hospitalId === id &&
+                              (!selectedExamType?.id || !b.examTypeId || b.examTypeId === selectedExamType.id)))
                       )
                       .map((b) => b.startTime);
 

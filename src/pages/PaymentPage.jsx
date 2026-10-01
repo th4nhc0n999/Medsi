@@ -186,7 +186,9 @@ export default function PaymentPage() {
           b.startTime === draft.startTime &&
           b.status !== 'cancelled' &&
           ((draft.doctorId && b.doctorId === draft.doctorId) ||
-            (draft.hospitalId && b.hospitalId === draft.hospitalId))
+            (draft.hospitalId &&
+              b.hospitalId === draft.hospitalId &&
+              (!draft.examTypeId || !b.examTypeId || b.examTypeId === draft.examTypeId)))
       );
 
       if (isSlotConflict) {

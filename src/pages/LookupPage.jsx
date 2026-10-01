@@ -90,7 +90,7 @@ export default function LookupPage() {
     const inputCode = cancelBookingCode.trim().toUpperCase();
     const expectedCode = (cancellingBooking.code || cancellingBooking.id || '').toUpperCase();
     if (!inputCode || inputCode !== expectedCode) {
-      alert(`Mã lịch hẹn không chính xác. Vui lòng nhập đúng mã "${expectedCode}" để xác thực quyền hủy lịch.`);
+      alert('Mã lịch hẹn không chính xác. Vui lòng kiểm tra lại mã trên phiếu hẹn khám để xác thực quyền hủy lịch.');
       return;
     }
     if (!cancelReason.trim()) {
@@ -294,7 +294,7 @@ export default function LookupPage() {
                   type="text"
                   value={cancelBookingCode}
                   onChange={(e) => setCancelBookingCode(e.target.value)}
-                  placeholder={`Nhập mã lịch hẹn (VD: ${cancellingBooking.code || cancellingBooking.id})...`}
+                  placeholder="Nhập mã lịch hẹn (VD: BK2026...)..."
                   className="w-full rounded-xl border border-slate-200 p-2.5 text-xs sm:text-sm focus:outline-hidden focus:border-sky-500 text-slate-800 font-mono font-bold uppercase"
                 />
                 <span className="text-[11px] text-slate-500 mt-1 block">

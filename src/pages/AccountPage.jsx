@@ -552,7 +552,11 @@ export default function AccountPage() {
               <div className="grid grid-cols-3 py-2 border-b border-slate-50">
                 <span className="text-slate-500 font-medium">Vai trò hệ thống:</span>
                 <span className="col-span-2 font-semibold text-sky-700 capitalize">
-                  {currentUser.role === 'admin' ? 'Quản trị viên (Admin)' : 'Bệnh nhân (Patient)'}
+                  {currentUser.role === 'admin'
+                    ? 'Quản trị viên (Admin)'
+                    : currentUser.role === 'doctor'
+                    ? 'Bác sĩ (Doctor)'
+                    : 'Bệnh nhân (Patient)'}
                 </span>
               </div>
 

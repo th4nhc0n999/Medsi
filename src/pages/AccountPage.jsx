@@ -261,7 +261,11 @@ export default function AccountPage() {
                     {currentUser.fullName}
                   </h1>
                   <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800">
-                    {currentUser.role === 'admin' ? 'Quản trị viên' : 'Bệnh nhân'}
+                    {currentUser.role === 'admin'
+                      ? 'Quản trị viên'
+                      : currentUser.role === 'doctor'
+                      ? 'Bác sĩ'
+                      : 'Bệnh nhân'}
                   </span>
                 </div>
                 <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 mt-1">
@@ -548,7 +552,11 @@ export default function AccountPage() {
               <div className="grid grid-cols-3 py-2 border-b border-slate-50">
                 <span className="text-slate-500 font-medium">Vai trò hệ thống:</span>
                 <span className="col-span-2 font-semibold text-sky-700 capitalize">
-                  {currentUser.role === 'admin' ? 'Quản trị viên (Admin)' : 'Bệnh nhân (Patient)'}
+                  {currentUser.role === 'admin'
+                    ? 'Quản trị viên (Admin)'
+                    : currentUser.role === 'doctor'
+                    ? 'Bác sĩ (Doctor)'
+                    : 'Bệnh nhân (Patient)'}
                 </span>
               </div>
 

@@ -49,6 +49,24 @@ export default function BookingPage() {
     hospital?.examTypes?.[0] || null
   );
 
+  const handleSelectExamType = (et) => {
+    setSelectedExamType(et);
+    if (selectedSlot) {
+      const currentBookings = getStorage(STORAGE_KEYS.BOOKINGS, []);
+      const isBookedForNewType = currentBookings.some(
+        (b) =>
+          b.date === selectedDate &&
+          b.startTime === selectedSlot &&
+          b.status !== 'cancelled' &&
+          b.hospitalId === id &&
+          (!b.examTypeId || b.examTypeId === et.id)
+      );
+      if (isBookedForNewType) {
+        setSelectedSlot('');
+      }
+    }
+  };
+
   // Form selections (React State)
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
@@ -118,7 +136,10 @@ export default function BookingPage() {
       (b) =>
         b.date === selectedDate &&
         b.status !== 'cancelled' &&
-        ((isDoctor && b.doctorId === id) || (!isDoctor && b.hospitalId === id))
+        ((isDoctor && b.doctorId === id) ||
+          (!isDoctor &&
+            b.hospitalId === id &&
+            (!selectedExamType?.id || !b.examTypeId || b.examTypeId === selectedExamType.id)))
     )
     .map((b) => b.startTime);
 
@@ -214,6 +235,26 @@ export default function BookingPage() {
     }
     if (!selectedProfileId) {
       setStepError('Vui lòng chọn hoặc tạo ít nhất một hồ sơ bệnh nhân');
+      return;
+    }
+
+    // Double-Booking Guard: Re-verify that slot is still available right now
+    const latestBookings = getStorage(STORAGE_KEYS.BOOKINGS, []);
+    const isSlotConflict = latestBookings.some(
+      (b) =>
+        b.date === selectedDate &&
+        b.startTime === selectedSlot &&
+        b.status !== 'cancelled' &&
+        ((isDoctor && b.doctorId === id) ||
+          (!isDoctor &&
+            b.hospitalId === id &&
+            (!selectedExamType?.id || !b.examTypeId || b.examTypeId === selectedExamType.id)))
+    );
+    if (isSlotConflict) {
+      setStepError(
+        `Rất tiếc! Khung giờ ${selectedSlot} ngày ${selectedDate} vừa có người khác đặt trước. Vui lòng chọn khung giờ khác!`
+      );
+      setSelectedSlot('');
       return;
     }
 
@@ -362,7 +403,7 @@ export default function BookingPage() {
                       return (
                         <div
                           key={et.id}
-                          onClick={() => setSelectedExamType(et)}
+                          onClick={() => handleSelectExamType(et)}
                           className={`p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer ${
                             isSelected
                               ? 'border-cyan-500 bg-cyan-50/70 ring-2 ring-cyan-500'
@@ -400,14 +441,35 @@ export default function BookingPage() {
                 </div>
                 <SlotPicker
                   selectedDate={selectedDate}
-                  onSelectDate={(d) => {
-                    setSelectedDate(d);
+                  onSelectDate={(newDate) => {
+                    setSelectedDate(newDate);
+
+                    const currentBookings = getStorage(STORAGE_KEYS.BOOKINGS, []);
+                    const bookedOnNewDate = currentBookings
+                      .filter(
+                        (b) =>
+                          b.date === newDate &&
+                          b.status !== 'cancelled' &&
+                          ((isDoctor && b.doctorId === id) ||
+                            (!isDoctor &&
+                              b.hospitalId === id &&
+                              (!selectedExamType?.id || !b.examTypeId || b.examTypeId === selectedExamType.id)))
+                      )
+                      .map((b) => b.startTime);
+
                     if (isDoctor) {
-                      const slotsForDate = getDoctorSchedule(id, d);
-                      if (!slotsForDate.includes(selectedSlot) || isSlotPast(d, selectedSlot)) {
+                      const slotsForDate = getDoctorSchedule(id, newDate);
+                      if (
+                        !slotsForDate.includes(selectedSlot) ||
+                        bookedOnNewDate.includes(selectedSlot) ||
+                        isSlotPast(newDate, selectedSlot)
+                      ) {
                         setSelectedSlot('');
                       }
-                    } else if (selectedSlot && isSlotPast(d, selectedSlot)) {
+                    } else if (
+                      bookedOnNewDate.includes(selectedSlot) ||
+                      (selectedSlot && isSlotPast(newDate, selectedSlot))
+                    ) {
                       setSelectedSlot('');
                     }
                   }}
@@ -554,6 +616,12 @@ export default function BookingPage() {
                 <img
                   src={isDoctor ? doctor.avatar : hospital.image}
                   alt={isDoctor ? doctor.name : hospital.name}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = isDoctor
+                      ? 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=400&auto=format&fit=crop&q=80'
+                      : 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=600&auto=format&fit=crop&q=80';
+                  }}
                   className="w-16 h-16 rounded-2xl object-cover shrink-0 border border-slate-100 shadow-xs"
                 />
                 <div className="min-w-0">

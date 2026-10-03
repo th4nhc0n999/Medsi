@@ -19,6 +19,10 @@ export default function DoctorCard({ doctor }) {
             <img
               src={doctor.avatar}
               alt={doctor.name}
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=400&auto=format&fit=crop&q=80';
+              }}
               className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover object-top border-2 border-slate-100 shadow-xs group-hover:scale-[1.02] transition-transform"
               loading="lazy"
             />

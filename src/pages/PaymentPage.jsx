@@ -159,7 +159,8 @@ export default function PaymentPage() {
   ];
 
   const handleProcessPayment = () => {
-    if (isExpired) {
+    const isQrOrWallet = selectedMethod === 'qr' || selectedMethod === 'ewallet';
+    if (isQrOrWallet && isExpired) {
       return;
     }
 
@@ -185,7 +186,9 @@ export default function PaymentPage() {
           b.startTime === draft.startTime &&
           b.status !== 'cancelled' &&
           ((draft.doctorId && b.doctorId === draft.doctorId) ||
-            (draft.hospitalId && b.hospitalId === draft.hospitalId))
+            (draft.hospitalId &&
+              b.hospitalId === draft.hospitalId &&
+              (!draft.examTypeId || !b.examTypeId || b.examTypeId === draft.examTypeId)))
       );
 
       if (isSlotConflict) {
@@ -335,12 +338,6 @@ export default function PaymentPage() {
                   return (
                     <label
                       key={method.id}
-                      onClick={() => {
-                        setSelectedMethod(method.id);
-                        if (isExpired) {
-                          handleResetTimer();
-                        }
-                      }}
                       className={`flex items-start gap-3.5 p-4 rounded-2xl border transition-all cursor-pointer ${
                         isSelected
                           ? method.id === 'ewallet'
@@ -353,12 +350,7 @@ export default function PaymentPage() {
                         type="radio"
                         name="paymentMethod"
                         checked={isSelected}
-                        onChange={() => {
-                          setSelectedMethod(method.id);
-                          if (isExpired) {
-                            handleResetTimer();
-                          }
-                        }}
+                        onChange={() => setSelectedMethod(method.id)}
                         className={`mt-1 cursor-pointer ${
                           method.id === 'ewallet'
                             ? 'text-[#d82d8b] focus:ring-[#d82d8b]'

@@ -46,7 +46,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Brand Logo */}
           <Link
-            to={currentUser ? (isAdmin ? '/admin' : isDoctor ? '/doctor' : '/explore') : '/auth'}
+            to={currentUser ? (isAdmin ? '/admin' : isDoctor ? '/doctor' : '/explore') : '/explore'}
             className="flex items-center gap-2.5 group focus:outline-hidden"
           >
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-cyan-500 flex items-center justify-center text-white shadow-md shadow-sky-500/20 group-hover:scale-105 transition-transform">

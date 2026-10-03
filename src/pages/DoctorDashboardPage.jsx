@@ -80,6 +80,8 @@ export default function DoctorDashboardPage() {
   const [patientDateFilter, setPatientDateFilter] = useState('all');
   const [patientStatusFilter, setPatientStatusFilter] = useState('all');
   const [selectedBookingDetail, setSelectedBookingDetail] = useState(null);
+  const [cancellingBooking, setCancellingBooking] = useState(null);
+  const [doctorCancelReason, setDoctorCancelReason] = useState('Bác sĩ có ca phẫu thuật khẩn cấp');
 
   // Feedback State
   const [toastMessage, setToastMessage] = useState(null);
@@ -285,6 +287,35 @@ export default function DoctorDashboardPage() {
     }
   };
 
+  // Handle appointment cancellation/rejection by doctor
+  const handleConfirmCancelBooking = () => {
+    if (!cancellingBooking) return;
+    const reason = doctorCancelReason.trim() || 'Bác sĩ có ca phẫu thuật khẩn cấp / bận đột xuất';
+    const updated = allBookings.map((b) => {
+      if (b.id === cancellingBooking.id) {
+        return {
+          ...b,
+          status: 'cancelled',
+          cancelReason: reason,
+          cancelledBy: 'doctor',
+          cancelledAt: new Date().toISOString(),
+        };
+      }
+      return b;
+    });
+    setStorage(STORAGE_KEYS.BOOKINGS, updated);
+    setAllBookings(updated);
+    showToast(`Đã từ chối/hủy lịch khám #${cancellingBooking.code} thành công!`, 'info');
+    if (selectedBookingDetail && selectedBookingDetail.id === cancellingBooking.id) {
+      setSelectedBookingDetail((prev) => ({
+        ...prev,
+        status: 'cancelled',
+        cancelReason: reason,
+      }));
+    }
+    setCancellingBooking(null);
+  };
+
   // Filtered appointments for Tab 2
   const filteredAppointments = doctorBookings.filter((b) => {
     if (patientDateFilter !== 'all' && b.date !== patientDateFilter) return false;
@@ -325,6 +356,10 @@ export default function DoctorDashboardPage() {
                 <img
                   src={doctorInfo.avatar}
                   alt={doctorInfo.name}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=400&auto=format&fit=crop&q=80';
+                  }}
                   className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-emerald-500 shadow-md shadow-emerald-500/10"
                 />
                 <span className="absolute -bottom-1 -right-1 px-2 py-0.5 bg-emerald-600 text-white text-[10px] font-extrabold uppercase rounded-lg shadow-xs">
@@ -840,6 +875,18 @@ export default function DoctorDashboardPage() {
                       </button>
 
                       <div className="flex items-center gap-2">
+                        {(bk.status === 'pending' || bk.status === 'approved') && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCancellingBooking(bk);
+                              setDoctorCancelReason('Bác sĩ có ca phẫu thuật khẩn cấp');
+                            }}
+                            className="px-3 py-1.5 text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 border border-rose-200 rounded-xl transition-colors cursor-pointer"
+                          >
+                            {bk.status === 'pending' ? 'Từ chối' : 'Hủy ca'}
+                          </button>
+                        )}
                         {bk.status === 'pending' && (
                           <button
                             type="button"
@@ -862,6 +909,11 @@ export default function DoctorDashboardPage() {
                         {bk.status === 'completed' && (
                           <span className="text-xs font-bold text-emerald-700 flex items-center gap-1">
                             <Check className="w-3.5 h-3.5" /> Đã xong
+                          </span>
+                        )}
+                        {bk.status === 'cancelled' && (
+                          <span className="text-xs font-bold text-rose-600 flex items-center gap-1">
+                            Đã hủy
                           </span>
                         )}
                       </div>
@@ -1246,6 +1298,27 @@ export default function DoctorDashboardPage() {
             )}
 
             <div className="flex justify-end gap-2 pt-2">
+              {(selectedBookingDetail.status === 'pending' || selectedBookingDetail.status === 'approved') && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCancellingBooking(selectedBookingDetail);
+                    setDoctorCancelReason('Bác sĩ có ca phẫu thuật khẩn cấp');
+                  }}
+                  className="px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-xl"
+                >
+                  {selectedBookingDetail.status === 'pending' ? 'Từ chối lịch' : 'Hủy ca khám'}
+                </button>
+              )}
+              {selectedBookingDetail.status === 'pending' && (
+                <button
+                  type="button"
+                  onClick={() => handleUpdateBookingStatus(selectedBookingDetail.id, 'approved')}
+                  className="px-4 py-2 text-xs font-bold text-white bg-sky-600 hover:bg-sky-700 rounded-xl shadow-xs"
+                >
+                  Xác nhận lịch
+                </button>
+              )}
               {selectedBookingDetail.status === 'approved' && (
                 <button
                   type="button"
@@ -1261,6 +1334,56 @@ export default function DoctorDashboardPage() {
                 className="px-4 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl"
               >
                 Đóng
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Doctor Cancel / Reject Modal */}
+      {cancellingBooking && (
+        <Modal
+          isOpen={Boolean(cancellingBooking)}
+          onClose={() => setCancellingBooking(null)}
+          title="Từ chối / Hủy Lịch Khám"
+        >
+          <div className="space-y-4 text-xs">
+            <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <span>
+                Bạn đang thực hiện từ chối / hủy lịch hẹn <strong>#{cancellingBooking.code}</strong> của bệnh nhân{' '}
+                <strong>{cancellingBooking.patientName}</strong> ngày <strong>{cancellingBooking.date}</strong> lúc{' '}
+                <strong>{cancellingBooking.startTime}</strong>.
+              </span>
+            </div>
+
+            <div>
+              <label className="font-bold text-slate-700 block mb-1.5 uppercase">
+                Lý do từ chối / hủy lịch (*):
+              </label>
+              <textarea
+                rows={3}
+                value={doctorCancelReason}
+                onChange={(e) => setDoctorCancelReason(e.target.value)}
+                placeholder="Nhập lý do bác sĩ không thể tiếp nhận ca khám này..."
+                className="w-full rounded-xl border border-slate-200 p-3 text-xs sm:text-sm focus:outline-hidden focus:border-sky-500 text-slate-800"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setCancellingBooking(null)}
+                className="px-4 py-2 font-bold text-slate-600 hover:bg-slate-100 rounded-xl"
+              >
+                Đóng
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmCancelBooking}
+                className="px-4 py-2 font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-xs"
+              >
+                Xác nhận Hủy lịch
               </button>
             </div>
           </div>

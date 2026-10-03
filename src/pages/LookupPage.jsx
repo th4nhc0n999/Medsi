@@ -17,6 +17,7 @@ import {
 import BookingCard from '../components/BookingCard';
 import Modal from '../components/Modal';
 import { STORAGE_KEYS, getStorage, setStorage } from '../utils/storage';
+import { validatePhoneNumber } from '../utils/validators';
 
 export default function LookupPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -29,6 +30,7 @@ export default function LookupPage() {
 
   // Cancellation modal
   const [cancellingBooking, setCancellingBooking] = useState(null);
+  const [cancelBookingCode, setCancelBookingCode] = useState('');
   const [cancelReason, setCancelReason] = useState('Bận việc đột xuất không thể đến khám');
   const [actionMessage, setActionMessage] = useState({ text: '', type: '' });
 
@@ -45,13 +47,24 @@ export default function LookupPage() {
       return;
     }
 
+    const phoneValidation = validatePhoneNumber(clean);
+    if (!phoneValidation.isValid) {
+      setActionMessage({
+        text: phoneValidation.error || 'Vui lòng nhập đầy đủ số điện thoại từ 9 đến 11 chữ số để tra cứu chính xác',
+        type: 'error',
+      });
+      return;
+    }
+
+    const normalizedQuery = phoneValidation.normalized;
+
     setActionMessage({ text: '', type: '' });
     const allBookings = getStorage(STORAGE_KEYS.BOOKINGS, []);
-    const normalizedQuery = clean.replace(/\D/g, '');
 
     const matched = allBookings.filter((b) => {
-      const bPhone = (b.patientPhone || '').replace(/\D/g, '');
-      return bPhone.includes(normalizedQuery);
+      const bPhoneRaw = (b.patientPhone || '').trim();
+      const bNormalized = validatePhoneNumber(bPhoneRaw).normalized || bPhoneRaw.replace(/\D/g, '');
+      return bNormalized === normalizedQuery;
     });
 
     setResults(matched);
@@ -74,6 +87,12 @@ export default function LookupPage() {
 
   const handleConfirmCancel = () => {
     if (!cancellingBooking) return;
+    const inputCode = cancelBookingCode.trim().toUpperCase();
+    const expectedCode = (cancellingBooking.code || cancellingBooking.id || '').toUpperCase();
+    if (!inputCode || inputCode !== expectedCode) {
+      alert('Mã lịch hẹn không chính xác. Vui lòng kiểm tra lại mã trên phiếu hẹn khám để xác thực quyền hủy lịch.');
+      return;
+    }
     if (!cancelReason.trim()) {
       alert('Vui lòng nhập lý do hủy lịch');
       return;
@@ -106,6 +125,7 @@ export default function LookupPage() {
       type: 'success',
     });
     setCancellingBooking(null);
+    setCancelBookingCode('');
   };
 
   return (
@@ -218,7 +238,11 @@ export default function LookupPage() {
                   <BookingCard
                     key={b.id}
                     booking={b}
-                    onCancelRequest={(item) => setCancellingBooking(item)}
+                    onCancelRequest={(item) => {
+                      setCancellingBooking(item);
+                      setCancelBookingCode('');
+                      setCancelReason('Bận việc đột xuất không thể đến khám');
+                    }}
                   />
                 ))}
               </div>
@@ -247,8 +271,11 @@ export default function LookupPage() {
         {cancellingBooking && (
           <Modal
             isOpen={Boolean(cancellingBooking)}
-            onClose={() => setCancellingBooking(null)}
-            title="Yêu cầu Hủy Lịch Khám"
+            onClose={() => {
+              setCancellingBooking(null);
+              setCancelBookingCode('');
+            }}
+            title="Xác thực & Hủy Lịch Khám"
           >
             <div className="space-y-4">
               <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-start gap-2">
@@ -256,6 +283,22 @@ export default function LookupPage() {
                 <span>
                   Bạn đang yêu cầu hủy lịch hẹn <strong>{cancellingBooking.code}</strong> với{' '}
                   <strong>{cancellingBooking.providerName}</strong> ngày <strong>{cancellingBooking.date}</strong>.
+                </span>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1.5 uppercase">
+                  Mã lịch hẹn để xác thực (*):
+                </label>
+                <input
+                  type="text"
+                  value={cancelBookingCode}
+                  onChange={(e) => setCancelBookingCode(e.target.value)}
+                  placeholder="Nhập mã lịch hẹn (VD: BK2026...)..."
+                  className="w-full rounded-xl border border-slate-200 p-2.5 text-xs sm:text-sm focus:outline-hidden focus:border-sky-500 text-slate-800 font-mono font-bold uppercase"
+                />
+                <span className="text-[11px] text-slate-500 mt-1 block">
+                  Vui lòng nhập đúng mã lịch hẹn để xác thực bạn là chủ sở hữu phiếu khám này trước khi hủy.
                 </span>
               </div>
 
@@ -275,7 +318,10 @@ export default function LookupPage() {
               <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setCancellingBooking(null)}
+                  onClick={() => {
+                    setCancellingBooking(null);
+                    setCancelBookingCode('');
+                  }}
                   className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl"
                 >
                   Giữ lại lịch
